@@ -1,0 +1,8 @@
+C:\project\Customs_Tool\eCustoms\eCustomsTests\bin\Debug\eCustomsTests.dll
+C:\project\Customs_Tool\eCustoms\eCustomsTests\bin\Debug\eCustomsTests.pdb
+C:\project\Customs_Tool\eCustoms\eCustomsTests\bin\Debug\eCustoms.exe
+C:\project\Customs_Tool\eCustoms\eCustomsTests\bin\Debug\FakeLabel.dll
+C:\project\Customs_Tool\eCustoms\eCustomsTests\bin\Debug\eCustoms.pdb
+C:\project\Customs_Tool\eCustoms\eCustomsTests\obj\Debug\eCustomsTests.csprojResolveAssemblyReference.cache
+C:\project\Customs_Tool\eCustoms\eCustomsTests\obj\Debug\eCustomsTests.dll
+C:\project\Customs_Tool\eCustoms\eCustomsTests\obj\Debug\eCustomsTests.pdb
