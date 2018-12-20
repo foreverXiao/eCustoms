@@ -201,44 +201,39 @@ namespace eCustoms
                 ComponentsAndOutputPerProcessOrder.Dispose();
                 return;
             }
-            string[] strFieldName = {"Batch No"};
+            string[] keyFieldsBatchNo = {"Batch No"};
             SqlLib sqlLib = new SqlLib();
-            DataTable dtBomList = sqlLib.SelectDistinct(ComponentsAndOutputPerProcessOrder, strFieldName);
+            DataTable BOM_DetailsListForUpload = sqlLib.SelectDistinct(ComponentsAndOutputPerProcessOrder, keyFieldsBatchNo);
             sqlLib.Dispose(0);
 
-            SqlConnection BomConn = new SqlConnection(SqlLib.StrSqlConnection);
-            if (BomConn.State == ConnectionState.Closed) { BomConn.Open(); }
-            SqlCommand BomComm = new SqlCommand();
-            BomComm.Connection = BomConn;
+            SqlConnection sqlDB_Conn = new SqlConnection(SqlLib.StrSqlConnection);
+            if (sqlDB_Conn.State == ConnectionState.Closed) { sqlDB_Conn.Open(); }
+            SqlCommand sqlCommands = new SqlCommand();
+            sqlCommands.Connection = sqlDB_Conn;
             
             //Delete those Batch No. in the temporary table M_DailyBOM if the same Batch No. to be uploaded from Excel file
-            SqlDataAdapter BomAdapter = new SqlDataAdapter("SELECT DISTINCT [Batch No] FROM M_DailyBOM", BomConn);
-            DataTable dtDailyBom = new DataTable();
-            BomAdapter.Fill(dtDailyBom);
-            if (dtDailyBom.Rows.Count > 0)
+            SqlDataAdapter BomAdapter = new SqlDataAdapter("SELECT DISTINCT [Batch No] FROM M_DailyBOM", sqlDB_Conn);
+            DataTable distinctBatchNoListInTableDailyBOM = new DataTable();
+            BomAdapter.Fill(distinctBatchNoListInTableDailyBOM);
+            if (distinctBatchNoListInTableDailyBOM.Rows.Count > 0)
             {
-                for (int i = 0; i < dtDailyBom.Rows.Count; i++)
+                for (int i = 0; i < distinctBatchNoListInTableDailyBOM.Rows.Count; i++)
                 {
-                    string strBomName = dtDailyBom.Rows[i][0].ToString().Trim();
-                    DataRow[] datarow = dtBomList.Select("[Batch No]='" + strBomName + "'");
+                    string BatchNo = distinctBatchNoListInTableDailyBOM.Rows[i][0].ToString().Trim();
+                    DataRow[] datarow = BOM_DetailsListForUpload.Select("[Batch No]='" + BatchNo + "'");
                     if (datarow.Length > 0)
                     {
-                        BomComm.CommandText = "DELETE FROM M_DailyBOM WHERE [Batch No] = '" + strBomName + "'";
-                        BomComm.ExecuteNonQuery();
+                        sqlCommands.CommandText = "DELETE FROM M_DailyBOM WHERE [Batch No] = '" + BatchNo + "'";
+                        sqlCommands.ExecuteNonQuery();
                     }
                 }
             }
-            dtDailyBom.Dispose();
+            distinctBatchNoListInTableDailyBOM.Dispose();
 
-            // Check if the Batch No to be uploaded is already exsiting in history BOM table, if yes, do not allow to upload BOM again.
-            //BomAdapter = new SqlDataAdapter("SELECT DISTINCT [Batch No] FROM C_BOM", BomConn);
-            //DataTable dtHistoryBom = new DataTable();
-            //BomAdapter.Fill(dtHistoryBom);
-            //BomAdapter.Dispose();
             // Check if BOM to be uploaded into system is alreay in BOM history record, if yes, do not upload BOM to system again
-            for (int i = 0; i < dtBomList.Rows.Count; i++)
+            for (int i = 0; i < BOM_DetailsListForUpload.Rows.Count; i++)
             {
-                string strBomName = dtBomList.Rows[i][0].ToString().Trim();
+                string strBomName = BOM_DetailsListForUpload.Rows[i][0].ToString().Trim();
                 DataRow[] datarow = FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No]='" + strBomName + "'");
                 if (datarow.Length > 0)
                 {
@@ -250,44 +245,43 @@ namespace eCustoms
                     ComponentsAndOutputPerProcessOrder.AcceptChanges();
                 }
             }
-            dtBomList.Dispose();
-            //dtHistoryBom.Dispose();
+            BOM_DetailsListForUpload.Dispose();
+            
             if (ComponentsAndOutputPerProcessOrder.Rows.Count == 0)
             {
-                MessageBox.Show("There is no new BOM needed to generate. (On reason : Same BOM has been registered in BOM history)", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("There is no new BOM to be uploaded. (All BOMs have been registered in BOM history?)", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 ComponentsAndOutputPerProcessOrder.Dispose();
-                BomConn.Dispose();
+                sqlDB_Conn.Dispose();
                 return;
             }
 
             
             ComponentsAndOutputPerProcessOrder.Columns.Add("Batch Path", typeof(string));
-            DataRow[] drRecycle = ComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%BP2%'"); //remove it from the component list if it is scrap items like drools
-            if (drRecycle.Length > 0)
+            DataRow[] recycleOrScrapItems = ComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%BP2%'"); //remove it from the component list if it is scrap items such as drools, rejected material
+            if (recycleOrScrapItems.Length > 0)
             { 
-                foreach (DataRow dr in drRecycle) { ComponentsAndOutputPerProcessOrder.Rows.Remove(dr); };
+                foreach (DataRow dr in recycleOrScrapItems) { ComponentsAndOutputPerProcessOrder.Rows.Remove(dr); };
                 ComponentsAndOutputPerProcessOrder.AcceptChanges();
             }
             
-            DataTable dtReckList = ComponentsAndOutputPerProcessOrder.Copy();
-            //drRecycle = dtReckList.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM' OR [Item Description] LIKE '%-COLOR-%'");
-            drRecycle = dtReckList.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
-            if (drRecycle.Length > 0) //if we have recyles or intermediates as input items in the BOM, or any over-production FG is changed to C-CODE
+            DataTable ComponentsAndOutputPerProcessOrder1 = ComponentsAndOutputPerProcessOrder.Copy();
+            recycleOrScrapItems = ComponentsAndOutputPerProcessOrder1.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
+            if (recycleOrScrapItems.Length > 0) //if we have recyles or intermediates as input items in the BOM, or any over-production FG is changed to C-CODE
             {
-                dtReckList.Columns.Add("IsMulti", typeof(string));
-                dtReckList.Columns.Add("Total RM Qty", typeof(decimal));
-                dtReckList.Columns.Add("IsFG", typeof(string));
-                dtReckList.Columns.Add("YesNo", typeof(string));
+                ComponentsAndOutputPerProcessOrder1.Columns.Add("IsMulti", typeof(string));
+                ComponentsAndOutputPerProcessOrder1.Columns.Add("Total RM Qty", typeof(decimal));
+                ComponentsAndOutputPerProcessOrder1.Columns.Add("IsFG", typeof(string));
+                ComponentsAndOutputPerProcessOrder1.Columns.Add("YesNo", typeof(string));
                 string strReckBom = null;
-                foreach (DataRow dr in drRecycle) 
+                foreach (DataRow dr in recycleOrScrapItems) 
                 { 
                     dr["YesNo"] = "TRUE";
                     strReckBom += "'" + dr["Lot No"].ToString().Trim().ToUpper() + "',";
                 }
-                DataRow[] datarow = dtReckList.Select("[YesNo] = '' OR [YesNo] IS NULL OR [YesNo] <> 'TRUE'");
-                foreach (DataRow dr in datarow) { dtReckList.Rows.Remove(dr); };
-                dtReckList.Columns.Remove("YesNo");
-                dtReckList.AcceptChanges(); //dtReckList includes all the rows with intermediate FG item (added a sufix like  'INTERMEDIATE')
+                DataRow[] datarow = ComponentsAndOutputPerProcessOrder1.Select("[YesNo] = '' OR [YesNo] IS NULL OR [YesNo] <> 'TRUE'");
+                foreach (DataRow dr in datarow) { ComponentsAndOutputPerProcessOrder1.Rows.Remove(dr); };
+                ComponentsAndOutputPerProcessOrder1.Columns.Remove("YesNo");
+                ComponentsAndOutputPerProcessOrder1.AcceptChanges(); //ComponentsAndOutputPerProcessOrder1 includes all the rows with intermediate FG item (added a sufix like  'INTERMEDIATE')
                 //datarow = ComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM' OR [Item Description] LIKE '%-COLOR-%'");
                 datarow = ComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
                 foreach (DataRow drow in datarow)
@@ -302,40 +296,40 @@ namespace eCustoms
                 string strSQL = "SELECT '' AS [Process Order No], '' AS [Actual Start Date], '' AS [Actual End Date], C_BOMDetail.[Batch No], '' AS [FG No], '' AS [FG Description], " +
                                 "[Item No], [Item Description], [Lot No], [Inventory Type], [RM Category], [FG Qty], 0.0 AS [RM Qty],  [Total Input Qty], " +
                                 " 0.0 AS [Drools Qty], '' AS [Batch Path], [Consumption] FROM C_BOMDetail LEFT JOIN C_BOM ON C_BOMDetail.[Batch No] = C_BOM.[Batch No] WHERE C_BOMDetail.[Batch No] IN (" + strReckBom + ") AND [Consumption] > 0";
-                SqlDataAdapter BomAdp = new SqlDataAdapter(strSQL, BomConn);
+                SqlDataAdapter BomAdp = new SqlDataAdapter(strSQL, sqlDB_Conn);
                 DataTable dtReckData = new DataTable();
                 dtReckData = ComponentsAndOutputPerProcessOrder.Clone();//Program will get data type as decimal instead of Int32 for Column [FG Qty], so added this sentence to make sure the new table is compatible with ComponentsAndOutputPerProcessOrder on Jan.14.2017
                               
                 BomAdp.Fill(dtReckData);//Get reycle or intermediate BOM from history BOM details                
                 BomAdp.Dispose();
 
-                for (int m = 0; m < dtReckList.Rows.Count; m++)
+                for (int m = 0; m < ComponentsAndOutputPerProcessOrder1.Rows.Count; m++)
                 {
-                    string strBatchNo = dtReckList.Rows[m]["Lot No"].ToString().Trim().ToUpper();
+                    string strBatchNo = ComponentsAndOutputPerProcessOrder1.Rows[m]["Lot No"].ToString().Trim().ToUpper();
                     DataRow[] drReckData = dtReckData.Select("[Batch No]='" + strBatchNo + "'");
                     if (drReckData.Length > 0)  // find out the history BOM to calculate recycle
                     {
                         foreach (DataRow dr in drReckData)
                         {
-                            dr["Batch No"] = dtReckList.Rows[m]["Batch No"].ToString().Trim();
-                            dr["Process Order No"] = dtReckList.Rows[m]["Process Order No"].ToString().Trim().ToUpper();
-                            dr["Actual Start Date"] = dtReckList.Rows[m]["Actual Start Date"].ToString().Trim().ToUpper();
-                            dr["Actual End Date"] = dtReckList.Rows[m]["Actual End Date"].ToString().Trim().ToUpper();
-                            dr["FG No"] = dtReckList.Rows[m]["FG No"].ToString().Trim().ToUpper();
-                            dr["FG Description"] = dtReckList.Rows[m]["FG Description"].ToString().Trim().ToUpper();
+                            dr["Batch No"] = ComponentsAndOutputPerProcessOrder1.Rows[m]["Batch No"].ToString().Trim();
+                            dr["Process Order No"] = ComponentsAndOutputPerProcessOrder1.Rows[m]["Process Order No"].ToString().Trim().ToUpper();
+                            dr["Actual Start Date"] = ComponentsAndOutputPerProcessOrder1.Rows[m]["Actual Start Date"].ToString().Trim().ToUpper();
+                            dr["Actual End Date"] = ComponentsAndOutputPerProcessOrder1.Rows[m]["Actual End Date"].ToString().Trim().ToUpper();
+                            dr["FG No"] = ComponentsAndOutputPerProcessOrder1.Rows[m]["FG No"].ToString().Trim().ToUpper();
+                            dr["FG Description"] = ComponentsAndOutputPerProcessOrder1.Rows[m]["FG Description"].ToString().Trim().ToUpper();
                             decimal dcFgQtyInSubBOMdetail = Convert.ToDecimal(dr["FG Qty"].ToString().Trim());
                             decimal dcTotalInputInSubBOMdetail = Convert.ToDecimal(dr["Total Input Qty"].ToString().Trim());
-                            string strFgQty = dtReckList.Rows[m]["FG Qty"].ToString().Trim();
+                            string strFgQty = ComponentsAndOutputPerProcessOrder1.Rows[m]["FG Qty"].ToString().Trim();
                             if (!String.IsNullOrEmpty(strFgQty)) { dr["FG Qty"] = Convert.ToInt32(strFgQty); }
-                            string strTotalInputQty = dtReckList.Rows[m]["Total Input Qty"].ToString().Trim();
+                            string strTotalInputQty = ComponentsAndOutputPerProcessOrder1.Rows[m]["Total Input Qty"].ToString().Trim();
                             if (!String.IsNullOrEmpty(strTotalInputQty)) { dr["Total Input Qty"] = Math.Round(Convert.ToDecimal(double.Parse(strTotalInputQty)), 6); }
-                            string strDroolsQty = dtReckList.Rows[m]["Drools Qty"].ToString().Trim();
+                            string strDroolsQty = ComponentsAndOutputPerProcessOrder1.Rows[m]["Drools Qty"].ToString().Trim();
                             if (!String.IsNullOrEmpty(strDroolsQty)) { dr["Drools Qty"] = Math.Round(Convert.ToDecimal(double.Parse(strDroolsQty)), 6); }
-                            dr["Batch Path"] = "/" + dtReckList.Rows[m]["Batch No"].ToString().Trim() + "/" + strBatchNo;
+                            dr["Batch Path"] = "/" + ComponentsAndOutputPerProcessOrder1.Rows[m]["Batch No"].ToString().Trim() + "/" + strBatchNo;
                             decimal dConsumption = Math.Round(Convert.ToDecimal(double.Parse(dr["Consumption"].ToString().Trim())), 6);
                             //decimal dLossRate = Math.Round(Convert.ToDecimal(double.Parse(dr["Qty Loss Rate"].ToString().Trim())), 6); ;
-                            //decimal dFgQty = Convert.ToDecimal(dtReckList.Rows[m]["FG Qty"].ToString().Trim());
-                            decimal dReckQty = Math.Round(Convert.ToDecimal(double.Parse(dtReckList.Rows[m]["RM Qty"].ToString().Trim())), 6);
+                            //decimal dFgQty = Convert.ToDecimal(ComponentsAndOutputPerProcessOrder1.Rows[m]["FG Qty"].ToString().Trim());
+                            decimal dReckQty = Math.Round(Convert.ToDecimal(double.Parse(ComponentsAndOutputPerProcessOrder1.Rows[m]["RM Qty"].ToString().Trim())), 6);
                             //decimal dTotalInputQty = Convert.ToDecimal(strTotalInputQty);
                             //dr["RM Qty"] = Math.Round(dTotalInputQty * dReckQty * dConsumption / (dTotalInputQty - dFgQty), 6);
                             dr["RM Qty"] = Math.Round(dReckQty * dConsumption * dcTotalInputInSubBOMdetail / dcFgQtyInSubBOMdetail, 6); //Revised on Mar.29.2017
@@ -345,10 +339,10 @@ namespace eCustoms
                     else  // use the BOM in the same FG to directly split the recycle qty into every existing RM
                     {
                         
-                            String batchNo = dtReckList.Rows[m]["Batch No"].ToString();
+                            String batchNo = ComponentsAndOutputPerProcessOrder1.Rows[m]["Batch No"].ToString();
                             decimal dTotalInputQty = 0.0M;
                             
-                            decimal dReckQty = Math.Round(Convert.ToDecimal(double.Parse(dtReckList.Rows[m]["RM Qty"].ToString().Trim())), 6);
+                            decimal dReckQty = Math.Round(Convert.ToDecimal(double.Parse(ComponentsAndOutputPerProcessOrder1.Rows[m]["RM Qty"].ToString().Trim())), 6);
                             DataRow[] drMyTable = ComponentsAndOutputPerProcessOrder.Select("[Batch No]='" + batchNo + "'");
                             foreach (DataRow dr in drMyTable)
                             {
@@ -365,7 +359,7 @@ namespace eCustoms
                         
                     }
                 }
-                dtReckList.Dispose();
+                ComponentsAndOutputPerProcessOrder1.Dispose();
                 if (dtReckData.Rows.Count > 0)
                 {
                     dtReckData.Columns.Remove("Consumption");
@@ -394,51 +388,51 @@ namespace eCustoms
                 }
                 ComponentsAndOutputPerProcessOrder.AcceptChanges();
             }
-            dtReckList.Dispose();
+            ComponentsAndOutputPerProcessOrder1.Dispose();
 
             for (int j = 0; j < ComponentsAndOutputPerProcessOrder.Rows.Count; j++)
             {
-                BomComm.Parameters.Clear();
-                BomComm.Parameters.Add("@ProcessOrderNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Process Order No"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@ActualStartDate", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Actual Start Date"].ToString().Trim();
-                BomComm.Parameters.Add("@ActualEndDate", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Actual End Date"].ToString().Trim();
+                sqlCommands.Parameters.Clear();
+                sqlCommands.Parameters.Add("@ProcessOrderNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Process Order No"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@ActualStartDate", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Actual Start Date"].ToString().Trim();
+                sqlCommands.Parameters.Add("@ActualEndDate", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Actual End Date"].ToString().Trim();
                 string strBatchPath = ComponentsAndOutputPerProcessOrder.Rows[j]["Batch Path"].ToString().Trim().ToUpper();
                 if (String.IsNullOrEmpty(strBatchPath)) { strBatchPath = "/" + ComponentsAndOutputPerProcessOrder.Rows[j]["Batch No"].ToString().Trim().ToUpper() + "/"; }
-                BomComm.Parameters.Add("@BatchPath", SqlDbType.NVarChar).Value = strBatchPath;
-                BomComm.Parameters.Add("@BatchNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Batch No"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@FgNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["FG No"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@FgDesc", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["FG Description"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@LineNo", SqlDbType.Int).Value = Convert.ToInt32(ComponentsAndOutputPerProcessOrder.Rows[j]["Line No"].ToString().Trim());
-                BomComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Item No"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@ItemDesc", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Item Description"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Lot No"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@InvType", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Inventory Type"].ToString().Trim().ToUpper();
-                BomComm.Parameters.Add("@RmCategory", SqlDbType.NVarChar).Value = string.Empty; // ComponentsAndOutputPerProcessOrder.Rows[j]["RM Category"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@BatchPath", SqlDbType.NVarChar).Value = strBatchPath;
+                sqlCommands.Parameters.Add("@BatchNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Batch No"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@FgNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["FG No"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@FgDesc", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["FG Description"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@LineNo", SqlDbType.Int).Value = Convert.ToInt32(ComponentsAndOutputPerProcessOrder.Rows[j]["Line No"].ToString().Trim());
+                sqlCommands.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Item No"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@ItemDesc", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Item Description"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Lot No"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@InvType", SqlDbType.NVarChar).Value = ComponentsAndOutputPerProcessOrder.Rows[j]["Inventory Type"].ToString().Trim().ToUpper();
+                sqlCommands.Parameters.Add("@RmCategory", SqlDbType.NVarChar).Value = string.Empty; // ComponentsAndOutputPerProcessOrder.Rows[j]["RM Category"].ToString().Trim().ToUpper();
                 string strFgQty = ComponentsAndOutputPerProcessOrder.Rows[j]["FG Qty"].ToString().Trim();
-                if (String.IsNullOrEmpty(strFgQty)) { BomComm.Parameters.Add("@FgQty", SqlDbType.Int).Value = 0; }
-                else { BomComm.Parameters.Add("@FgQty", SqlDbType.Int).Value = Convert.ToInt32(strFgQty); }
+                if (String.IsNullOrEmpty(strFgQty)) { sqlCommands.Parameters.Add("@FgQty", SqlDbType.Int).Value = 0; }
+                else { sqlCommands.Parameters.Add("@FgQty", SqlDbType.Int).Value = Convert.ToInt32(strFgQty); }
                 string strRmQty = ComponentsAndOutputPerProcessOrder.Rows[j]["RM Qty"].ToString().Trim();
-                if (String.IsNullOrEmpty(strRmQty)) { BomComm.Parameters.Add("@RmQty", SqlDbType.Decimal).Value = 0.0; }
-                else { BomComm.Parameters.Add("@RmQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(strRmQty)), 6); }
+                if (String.IsNullOrEmpty(strRmQty)) { sqlCommands.Parameters.Add("@RmQty", SqlDbType.Decimal).Value = 0.0; }
+                else { sqlCommands.Parameters.Add("@RmQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(strRmQty)), 6); }
                 string strTotalInputQty = ComponentsAndOutputPerProcessOrder.Rows[j]["Total Input Qty"].ToString().Trim();
-                if (String.IsNullOrEmpty(strTotalInputQty)) { BomComm.Parameters.Add("@TotalInputQty", SqlDbType.Decimal).Value = 0.0; }
-                else { BomComm.Parameters.Add("@TotalInputQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(strTotalInputQty)), 6); }
+                if (String.IsNullOrEmpty(strTotalInputQty)) { sqlCommands.Parameters.Add("@TotalInputQty", SqlDbType.Decimal).Value = 0.0; }
+                else { sqlCommands.Parameters.Add("@TotalInputQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(strTotalInputQty)), 6); }
                 string strDroolsQty = ComponentsAndOutputPerProcessOrder.Rows[j]["Drools Qty"].ToString().Trim();
-                if (String.IsNullOrEmpty(strDroolsQty)) { BomComm.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = 0.0; }
-                else { BomComm.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(strDroolsQty)), 6); }
-                BomComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
-                BomComm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
+                if (String.IsNullOrEmpty(strDroolsQty)) { sqlCommands.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = 0.0; }
+                else { sqlCommands.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(strDroolsQty)), 6); }
+                sqlCommands.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
+                sqlCommands.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
 
-                BomComm.CommandText = "INSERT INTO M_DailyBOM([Process Order No], [Actual Start Date], [Actual End Date], [Batch Path], [Batch No], [FG No], " + 
+                sqlCommands.CommandText = "INSERT INTO M_DailyBOM([Process Order No], [Actual Start Date], [Actual End Date], [Batch Path], [Batch No], [FG No], " + 
                                       "[FG Description], [Line No], [Item No], [Item Description], [Lot No], [Inventory Type], [RM Category], [FG Qty], [RM Qty], " + 
                                       "[Total Input Qty], [Drools Qty], [Creater], [Created Date]) VALUES(@ProcessOrderNo, @ActualStartDate, @ActualEndDate, " + 
                                       "@BatchPath, @BatchNo, @FgNo, @FgDesc, @LineNo, @ItemNo, @ItemDesc, @LotNo, @InvType, @RmCategory, @FgQty, @RmQty, " + 
                                       "@TotalInputQty, @DroolsQty, @Creater, @CreatedDate)";
-                BomComm.ExecuteNonQuery();
-                BomComm.Parameters.Clear();
+                sqlCommands.ExecuteNonQuery();
+                sqlCommands.Parameters.Clear();
             }            
-            BomComm.Dispose();
-            BomConn.Dispose();
+            sqlCommands.Dispose();
+            sqlDB_Conn.Dispose();
             this.GetDgvData(true);
         }
 
@@ -1047,21 +1041,36 @@ namespace eCustoms
             openRptDlg.Filter = "Excel Database File(*.xls;*.xlsx)|*.xls;*.xlsx";
             openRptDlg.ShowDialog();
             this.txtPathRpt.Text = openRptDlg.FileName;
-        }
-
-        private void btnUploadRpt_Click(object sender, EventArgs e) //upload excel file containing information from COOISPI report which has all the inventory input and output per process order
-        {
             String pathAndFileName = this.txtPathRpt.Text.Trim();
             if (String.IsNullOrEmpty(pathAndFileName))
-            { MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            {
+                MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return;
+            }
+
             try
             {
                 String messageF = this.TransformRawDataOfProdutionInputAndOutputToStandardFormat(pathAndFileName);
-                if (!string.IsNullOrEmpty(messageF)) {MessageBox.Show(messageF, "Data Issues", MessageBoxButtons.OK, MessageBoxIcon.Warning); };
-                
+                if (!string.IsNullOrEmpty(messageF))
+                {
+                    MessageBox.Show(messageF, "Data Issues", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                };
             }
             catch (Exception) { throw; }
         }
+
+        //private void btnUploadRpt_Click(object sender, EventArgs e) //upload excel file containing information from COOISPI report which has all the inventory input and output per process order
+        //{
+        //    String pathAndFileName = this.txtPathRpt.Text.Trim();
+        //    if (String.IsNullOrEmpty(pathAndFileName))
+        //    { MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        //    try
+        //    {
+        //        String messageF = this.TransformRawDataOfProdutionInputAndOutputToStandardFormat(pathAndFileName);
+        //        if (!string.IsNullOrEmpty(messageF)) {MessageBox.Show(messageF, "Data Issues", MessageBoxButtons.OK, MessageBoxIcon.Warning); };
+                
+        //    }
+        //    catch (Exception) { throw; }
+        //}
 
 
         public String TransformRawDataOfProdutionInputAndOutputToStandardFormat(string strFilePath) 

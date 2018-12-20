@@ -151,17 +151,6 @@
         FKNjqDQ1AQMDAGSg9RVTQAqoAAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="btnUploadRpt.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        wwAADsMBx2+oZAAAAShJREFUOE9joAkoWBf0P2GVFRinrXaB01Bp3KDrZDpY4Z5ny/+/+n0PBZ//vgUs
-        B1IDVY4KQBKZaz3+P/19HS8GqQG5EKoNAUDOBNly99ep/zf/HsWLQWqh2iAAJFB+wuv/qd/rwBhkEDYM
-        k0s7oo9qCIhTf8vj/4Gfc/8f+rYIJwaFDUjNvM+Z2A3Y+KPt//YfE/DiTT86/rfdCcE0ACS48FP+/7Vf
-        G+EYpBiZBmGQGqwuAAmCJJd/KUfBq7/VYIiBMIoBoPhtO5sAtmHzly6wU/f8nP5//885KE6HuaL2RND/
-        fPSoBJm49n4/OLBAoQ0KMFiswNggOZChKLbDACwVgqIJlBbQMSwqQQkJb2qEuQTdAJAYSA5rKkQHIP+B
-        FKNjqDQ1AQMDAGSg9RVTQAqoAAAAAElFTkSuQmCC
-</value>
-  </data>
   <metadata name="dgvCheck.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
