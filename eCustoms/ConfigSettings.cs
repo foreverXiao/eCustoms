@@ -212,243 +212,59 @@ namespace eCustoms
             }
         }
 
-        public DataTable MergeDataTable(DataTable dt1, DataTable dt2, String KeyColName)
+        public DataTable leftJoinDatatablesOnKeyColumn(DataTable leftMainTable, DataTable supplementaryTable, String KeyColName)
         {
-            DataTable dtReturn = new DataTable();
+            DataTable joinedFinalTable = new DataTable();
             int i = 0;
             int j = 0;
             int k = 0;
-            int colKey1 = 0;
-            int colKey2 = 0;
+            int keyColumnInleftMainTable = 0;
+            int keyColumnIn_supplementaryTable = 0;
 
-            dtReturn.TableName = dt1.TableName;
-            for (i = 0; i < dt1.Columns.Count; i++)
+            joinedFinalTable.TableName = leftMainTable.TableName;
+            for (i = 0; i < leftMainTable.Columns.Count; i++)
             {
-                if (dt1.Columns[i].ColumnName == KeyColName) { colKey1 = i; }
-                dtReturn.Columns.Add(dt1.Columns[i].ColumnName);
+                if (leftMainTable.Columns[i].ColumnName == KeyColName) { keyColumnInleftMainTable = i; }
+                joinedFinalTable.Columns.Add(leftMainTable.Columns[i].ColumnName);
             }
 
-            for (j = 0; j < dt2.Columns.Count; j++)
+            for (j = 0; j < supplementaryTable.Columns.Count; j++)
             {
-                if (dt2.Columns[j].ColumnName == KeyColName)
+                if (supplementaryTable.Columns[j].ColumnName == KeyColName)
                 {
-                    colKey2 = j;
+                    keyColumnIn_supplementaryTable = j;
                     continue;
                 }
-                dtReturn.Columns.Add(dt2.Columns[j].ColumnName);
+                joinedFinalTable.Columns.Add(supplementaryTable.Columns[j].ColumnName);
             }
 
-            for (i = 0; i < dt1.Rows.Count; i++)
+            for (i = 0; i < leftMainTable.Rows.Count; i++)
             {
                 DataRow dr;
-                dr = dtReturn.NewRow();
-                dtReturn.Rows.Add(dr);
+                dr = joinedFinalTable.NewRow();
+                joinedFinalTable.Rows.Add(dr);
             }
 
-            for (i = 0; i < dt1.Rows.Count; i++)
+            for (i = 0; i < leftMainTable.Rows.Count; i++)
             {
-                for (j = 0; j < dt1.Columns.Count; j++)
-                { dtReturn.Rows[i][j] = dt1.Rows[i][j].ToString(); }
+                for (j = 0; j < leftMainTable.Columns.Count; j++)
+                { joinedFinalTable.Rows[i][j] = leftMainTable.Rows[i][j].ToString(); }
 
-                DataRow[] drow = dt2.Select(KeyColName + " = '" + dt1.Rows[i][colKey1].ToString() + "'");
+                DataRow[] drow = supplementaryTable.Select(KeyColName + " = '" + leftMainTable.Rows[i][keyColumnInleftMainTable].ToString() + "'");
                 if (drow.Length > 0)
                 {
-                    for (k = 0; k < dt2.Columns.Count; k++)
+                    for (k = 0; k < supplementaryTable.Columns.Count; k++)
                     {
-                        if (k == colKey2) { continue; }
-                        dtReturn.Rows[i][j] = drow[0][k].ToString();
+                        if (k == keyColumnIn_supplementaryTable) { continue; }
+                        joinedFinalTable.Rows[i][j] = drow[0][k].ToString();
                         j++;
                     }
                 }
             }
-            return dtReturn;
+
+            return joinedFinalTable;
         }
 
-        public DataTable MergeDataTable1(DataTable dt1, DataTable dt2, String KeyColName1, String KeyColName2)
-        {
-            DataTable dtReturn = new DataTable();
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int colKey1 = 0;
-            int colKey11 = 0;
-            int colKey2 = 0;
-            int colKey22 = 0;
-
-            dtReturn.TableName = dt1.TableName;
-            for (i = 0; i < dt1.Columns.Count; i++)
-            {
-                if (dt1.Columns[i].ColumnName == KeyColName1) { colKey1 = i; }
-                if (dt1.Columns[i].ColumnName == KeyColName2) { colKey11 = i; }
-                dtReturn.Columns.Add(dt1.Columns[i].ColumnName);
-            }
-
-            for (j = 0; j < dt2.Columns.Count; j++)
-            {
-                if (dt2.Columns[j].ColumnName == KeyColName1)
-                {
-                    colKey2 = j;                 
-                    continue;
-                }
-                if (dt2.Columns[j].ColumnName == KeyColName2)
-                {
-                    colKey22 = j;
-                    continue;
-                }
-                dtReturn.Columns.Add(dt2.Columns[j].ColumnName);
-            }
-
-            for (i = 0; i < dt1.Rows.Count; i++)
-            {
-                DataRow dr;
-                dr = dtReturn.NewRow();
-                dtReturn.Rows.Add(dr);
-            }
-
-            for (i = 0; i < dt1.Rows.Count; i++)
-            {
-                for (j = 0; j < dt1.Columns.Count; j++)
-                { dtReturn.Rows[i][j] = dt1.Rows[i][j].ToString(); }
-
-                DataRow[] drow = dt2.Select("[" + KeyColName1 + "] = '" + dt1.Rows[i][colKey1].ToString() + "' AND [" + KeyColName2 + "] = '" + dt1.Rows[i][colKey11].ToString() + "'");
-                if (drow.Length > 0)
-                {
-                    for (k = 0; k < dt2.Columns.Count; k++)
-                    {
-                        if (k == colKey2 || k == colKey22) { continue; }
-                        dtReturn.Rows[i][j] = drow[0][k].ToString();
-                        j++;
-                    }
-                }
-            }
-            return dtReturn;
-        }
-
-        public DataTable MergeDataTable2(DataTable dt1, DataTable dt2, String KeyColName, String strGoodsType)
-        {
-            DataTable dtReturn = new DataTable();
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int colKey1 = 0;
-            int colKey2 = 0;
-            int colkey3 = 0;
-
-            dtReturn.TableName = dt1.TableName;
-            for (i = 0; i < dt1.Columns.Count; i++)
-            {
-                if (dt1.Columns[i].ColumnName == KeyColName) { colKey1 = i; }
-                if (dt1.Columns[i].ColumnName == strGoodsType.Substring(0, strGoodsType.Length - 1)) { colkey3 = i; }
-                dtReturn.Columns.Add(dt1.Columns[i].ColumnName);
-            }
-
-            for (j = 0; j < dt2.Columns.Count; j++)
-            {
-                if (dt2.Columns[j].ColumnName == KeyColName)
-                {
-                    colKey2 = j;
-                    continue;
-                }
-                dtReturn.Columns.Add(dt2.Columns[j].ColumnName);
-            }
-
-            dt2.Columns.Add("AsIs", typeof(bool));
-            for (i = 0; i < dt1.Rows.Count; i++)
-            {
-                DataRow dr = dtReturn.NewRow();
-                dtReturn.Rows.Add(dr);
-            }
-
-            for (i = 0; i < dt1.Rows.Count; i++)
-            {
-                for (j = 0; j < dt1.Columns.Count; j++)
-                { dtReturn.Rows[i][j] = dt1.Rows[i][j].ToString(); }
-
-                DataRow[] drow = dt2.Select(KeyColName + " = '" + dt1.Rows[i][colKey1].ToString() + "' AND " + strGoodsType + " = '" + dt1.Rows[i][colkey3].ToString() + "'");
-                if (drow.Length > 0)
-                {
-                    foreach (DataRow dr in drow)
-                    {
-                        for (k = 0; k < dt2.Columns.Count - 1; k++)
-                        {
-                            if (k == colKey2) { continue; }
-                            dtReturn.Rows[i][j] = dr[k].ToString();
-                            j++;
-                        }
-                        dr["AsIs"] = true;
-                    }
-                }
-            }
-            return dtReturn;
-        }
-
-        public DataTable MergeDataTable3(DataTable dt1, DataTable dt2, String KeyColName1, String KeyColName2, String KeyColName3)
-        {
-            DataTable dtReturn = new DataTable();
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int colKey1 = 0;
-            int colKey11 = 0;
-            int colKey111 = 0;
-            int colKey2 = 0;
-            int colKey22 = 0;
-            int colKey222 = 0;
-
-            dtReturn.TableName = dt1.TableName;
-            for (i = 0; i < dt1.Columns.Count; i++)
-            {
-                if (dt1.Columns[i].ColumnName == KeyColName1) { colKey1 = i; }
-                if (dt1.Columns[i].ColumnName == KeyColName2) { colKey11 = i; }
-                if (dt1.Columns[i].ColumnName == KeyColName3) { colKey111 = i; }
-                dtReturn.Columns.Add(dt1.Columns[i].ColumnName);
-            }
-
-            for (j = 0; j < dt2.Columns.Count; j++)
-            {
-                if (dt2.Columns[j].ColumnName == KeyColName1)
-                {
-                    colKey2 = j;
-                    continue;
-                }
-                if (dt2.Columns[j].ColumnName == KeyColName2)
-                {
-                    colKey22 = j;
-                    continue;
-                }
-                if (dt2.Columns[j].ColumnName == KeyColName3)
-                {
-                    colKey222 = j;
-                    continue;
-                }
-                dtReturn.Columns.Add(dt2.Columns[j].ColumnName);
-            }
-
-            for (i = 0; i < dt1.Rows.Count; i++)
-            {
-                DataRow dr;
-                dr = dtReturn.NewRow();
-                dtReturn.Rows.Add(dr);
-            }
-
-            for (i = 0; i < dt1.Rows.Count; i++)
-            {
-                for (j = 0; j < dt1.Columns.Count; j++)
-                { dtReturn.Rows[i][j] = dt1.Rows[i][j].ToString(); }
-
-                DataRow[] drow = dt2.Select("[" + KeyColName1 + "] = '" + dt1.Rows[i][colKey1].ToString() + "' AND [" + KeyColName2 + "] = '" + dt1.Rows[i][colKey11].ToString() + "' AND [" + KeyColName3 + "] = '" + dt1.Rows[i][colKey111].ToString() + "'");
-                if (drow.Length > 0)
-                {
-                    for (k = 0; k < dt2.Columns.Count; k++)
-                    {
-                        if (k == colKey2 || k == colKey22 || k == colKey222) { continue; }
-                        dtReturn.Rows[i][j] = drow[0][k].ToString();
-                        j++;
-                    }
-                }
-            }
-            return dtReturn;
-        }
 
         public DataTable SelectDistinct(DataTable SourceTable, params string[] FieldNames)
         {

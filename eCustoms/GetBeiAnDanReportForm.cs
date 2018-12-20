@@ -202,7 +202,7 @@ namespace eCustoms
             AdpDlBAD.Fill(dtCode);
             dtDocBAD.Columns["原产地/目的地"].ColumnName = "原产地";
             SqlLib lib = new SqlLib();
-            DataTable dtCopy = lib.MergeDataTable(dtDocBAD, dtCode, "原产地");            
+            DataTable dtCopy = lib.leftJoinDatatablesOnKeyColumn(dtDocBAD, dtCode, "原产地");            
             dtCode.Clear();
             dtCode.Dispose();
             dtDocBAD.Columns["原产地"].ColumnName = "原产地/目的地";

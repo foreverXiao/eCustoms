@@ -23,7 +23,7 @@ namespace eCustoms
         protected PopUpFilterForm filterFrm = null;
         string strFilter = null;
         DataTable dtRM_ITEM_ListInBOMDetail = new DataTable();//Component item can be found in BOM detail table (only input items for every BOM)
-        DataTable dtFGno_BatchNoListInBOM = new DataTable(); //reycle or intermediate FG can be found in FG BOM table (Only output item for every BOM)
+        DataTable FG_and_BatchNoListFromTableOverviewBOM = new DataTable(); //reycle or intermediate FG can be found in FG BOM table (Only output item for every BOM)
         DataTable dtBatchNoListInBOM_but_Different_FG_Item = new DataTable(); //Batch no can be found in FG BOM table but FG item is different because FG item is changed to recycle C-code item
 
         public GetBomDataForm() { InitializeComponent(); }
@@ -43,8 +43,8 @@ namespace eCustoms
             SqlDataAdapter exeAdapter = new SqlDataAdapter();
             exeComm.CommandText = @"SELECT DISTINCT [FG NO], [Batch No] FROM C_BOM";
             exeAdapter.SelectCommand = exeComm;
-            //DataTable dtFGno_BatchNoListInBOM = new DataTable();
-            exeAdapter.Fill(dtFGno_BatchNoListInBOM);
+            //DataTable FG_and_BatchNoListFromTableOverviewBOM = new DataTable();
+            exeAdapter.Fill(FG_and_BatchNoListFromTableOverviewBOM);
             exeComm.CommandText = @"SELECT DISTINCT [Item No] FROM C_BOMDetail";
             exeAdapter.SelectCommand = exeComm;
             //DataTable dtRM_ITEM_ListInBOMDetail = new DataTable();
@@ -55,7 +55,7 @@ namespace eCustoms
         }
 
         private void GetBomDataForm_FormClosing(object sender, FormClosingEventArgs e)
-        { dtExRate.Dispose(); dtFillDGV.Dispose(); dtRM_ITEM_ListInBOMDetail.Dispose(); dtFGno_BatchNoListInBOM.Dispose(); }
+        { dtExRate.Dispose(); dtFillDGV.Dispose(); dtRM_ITEM_ListInBOMDetail.Dispose(); FG_and_BatchNoListFromTableOverviewBOM.Dispose(); }
 
         private void dgvBOM_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -157,14 +157,14 @@ namespace eCustoms
 
         private void btnUpload_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(this.txtPath.Text.Trim()))
+            String pathAndFileName = this.txtPath.Text.Trim();
+            if (String.IsNullOrEmpty(pathAndFileName))
             { 
                 MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return; 
             }
           
-            bool isLatestExcelFormatXLSX = this.txtPath.Text.ToLower().Contains(".xlsx");
-            this.ImportExcelData(this.txtPath.Text.Trim(), isLatestExcelFormatXLSX);
+            this.ImportExcelData(pathAndFileName);
             ComsumptionRateEuqalTo100Percent();// Attach this function here to make sure operator will not miss this step  on June.22.2017
           
         }
@@ -177,11 +177,9 @@ namespace eCustoms
                             "\n\tTotal Input Qty, \n\tDrools Qty.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        public void ImportExcelData(string strFilePath, bool isLatestExcelFormatXLSX)
+        public void ImportExcelData(string strFilePath)
         {
-            string strConn;
-            if (isLatestExcelFormatXLSX) { strConn = @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + strFilePath + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
-            else { strConn = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + strFilePath + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
+            string strConn = getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
 
             OleDbConnection myConn = new OleDbConnection(strConn);
             myConn.Open();
@@ -234,7 +232,7 @@ namespace eCustoms
             for (int i = 0; i < dtBomList.Rows.Count; i++)
             {
                 string strBomName = dtBomList.Rows[i][0].ToString().Trim();
-                DataRow[] datarow = dtFGno_BatchNoListInBOM.Select("[Batch No]='" + strBomName + "'");
+                DataRow[] datarow = FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No]='" + strBomName + "'");
                 if (datarow.Length > 0)
                 {
                     DataRow[] drow = myTable.Select("[Batch No]='" + strBomName + "'");
@@ -265,8 +263,8 @@ namespace eCustoms
             }
             
             DataTable dtReckList = myTable.Copy();
-            //drRecycle = dtReckList.Select("[Item Description] LIKE '%-INTERMEDIATE' OR [Item Description] LIKE '%-COLOR-%'");
-            drRecycle = dtReckList.Select("[Item Description] LIKE '%-INTERMEDIATE'");
+            //drRecycle = dtReckList.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM' OR [Item Description] LIKE '%-COLOR-%'");
+            drRecycle = dtReckList.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
             if (drRecycle.Length > 0) //if we have recyles or intermediates as input items in the BOM, or any over-production FG is changed to C-CODE
             {
                 dtReckList.Columns.Add("IsMulti", typeof(string));
@@ -283,8 +281,8 @@ namespace eCustoms
                 foreach (DataRow dr in datarow) { dtReckList.Rows.Remove(dr); };
                 dtReckList.Columns.Remove("YesNo");
                 dtReckList.AcceptChanges(); //dtReckList includes all the rows with intermediate FG item (added a sufix like  'INTERMEDIATE')
-                //datarow = myTable.Select("[Item Description] LIKE '%-INTERMEDIATE' OR [Item Description] LIKE '%-COLOR-%'");
-                datarow = myTable.Select("[Item Description] LIKE '%-INTERMEDIATE'");
+                //datarow = myTable.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM' OR [Item Description] LIKE '%-COLOR-%'");
+                datarow = myTable.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
                 foreach (DataRow drow in datarow)
                 {//myTable excludes all the rows with intermediate FG item with batch No found in BOM history (added a sufix like  'INTERMEDIATE')
                      myTable.Rows.Remove(drow);
@@ -937,22 +935,20 @@ namespace eCustoms
 
         private void btnUploadBom_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(this.txtPathBom.Text.Trim()))
+            String pathAndFileName = this.txtPathBom.Text.Trim();
+            if (String.IsNullOrEmpty(pathAndFileName))
             { MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             try
             {
-                bool bJudge = this.txtPathBom.Text.ToLower().Contains(".xlsx");
-                this.ImportBom(this.txtPathBom.Text.Trim(), bJudge);
+                this.ImportBom(pathAndFileName);
                 ComsumptionRateEuqalTo100Percent();// Attach this function here to make sure operator will not miss this step  on July.17.2017
             }
             catch (Exception) { throw; }
         }
 
-        public void ImportBom(string strFilePath, bool bJudge)
+        public void ImportBom(string strFilePath)
         {
-            string strConn;
-            if (bJudge) { strConn = @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + strFilePath + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
-            else { strConn = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + strFilePath + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
+            string strConn = getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
 
             OleDbConnection fzConn = new OleDbConnection(strConn);
             fzConn.Open();
@@ -1048,124 +1044,120 @@ namespace eCustoms
 
         private void btnUploadRpt_Click(object sender, EventArgs e) //upload excel file containing information from COOISPI report which has all the inventory input and output per process order
         {
-            if (String.IsNullOrEmpty(this.txtPathRpt.Text.Trim()))
+            String pathAndFileName = this.txtPathRpt.Text.Trim();
+            if (String.IsNullOrEmpty(pathAndFileName))
             { MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             try
             {
-                bool isLatestExcelFormatXLSX = this.txtPathRpt.Text.ToLower().Contains(".xlsx");
-                String messageF = this.TidyUpDailyBom(this.txtPathRpt.Text.Trim(), isLatestExcelFormatXLSX);
+                String messageF = this.TidyUpDailyBom(pathAndFileName);
                 if (!string.IsNullOrEmpty(messageF)) {MessageBox.Show(messageF, "Data Issues", MessageBoxButtons.OK, MessageBoxIcon.Warning); };
                 
             }
             catch (Exception) { throw; }
         }
 
-        public String TidyUpDailyBom(string strFilePath, bool isLatestExcelFormatXLSX) 
+
+        public String TidyUpDailyBom(string strFilePath) 
         {
-            String message1 = String.Empty;
+            String messageToBeReturned = String.Empty;
+
             DataTable dtMessage = new DataTable();
             dtMessage.Columns.Add("Information", typeof(string));
             dtMessage.Columns.Add("Process order", typeof(string));
             dtMessage.Columns.Add("RM Item No", typeof(string));
             dtMessage.Columns.Add("Lot No", typeof(string));
-            string strConn;
-            if (isLatestExcelFormatXLSX) { strConn = @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + strFilePath + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
-            else { strConn = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + strFilePath + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
 
-            OleDbConnection RptConn = new OleDbConnection(strConn);
-            RptConn.Open();
-            strConn = "SELECT [Order], [Batch] AS [Batch No], [Material] AS [FG No], [Material description] AS [FG Description], [Unit of Entry (=ERFME)] AS [UOM], " +
+            string strConn = getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
+            OleDbConnection SpreadsheetReportConn = new OleDbConnection(strConn);
+            SpreadsheetReportConn.Open();
+
+            String selectionSQL = "SELECT [Order], [Batch] AS [Batch No], [Material] AS [FG No], [Material description] AS [FG Description], [Unit of Entry (=ERFME)] AS [UOM], " +
                       "[Quantity in unit of entry (ERFME)] AS [FG Qty], 'Raw Material' AS [Inventory Type], [Movement Type], [Actual start time] AS [Actual Start Date], " +
-                      "[Actual finish date] AS [Actual End Date] FROM [Sheet1$] WHERE [Movement Type] IN ('101', '102') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')";
-            OleDbDataAdapter RptAdapter = new OleDbDataAdapter(strConn, RptConn);
-            DataTable dtBomRptM = new DataTable();
-            dtBomRptM.Columns.Add("FG Qty", typeof(Int32));
-            RptAdapter.Fill(dtBomRptM);//table dtBomRptM represents all output FGs (101 means quantity increase while 102 means qty decrease)
-            dtBomRptM.Columns["FG Qty"].SetOrdinal(4);
-            strConn = "SELECT [Order], [Material] AS [Item No], [Material description] AS [Item Description], [Batch] AS [Lot No], [Movement Type], [Unit of Entry (=ERFME)] AS [UOM], " +
+                      "[Actual finish date] AS [Actual End Date] FROM [Sheet1$] WHERE [Movement Type] IN ('101', '102') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')"; //(101 means quantity increase while 102 means qty decrease)
+            OleDbDataAdapter SpreadsheetReportAdapter = new OleDbDataAdapter(selectionSQL, SpreadsheetReportConn);
+            DataTable dtProductionOutputByProcessOrder = new DataTable();
+            dtProductionOutputByProcessOrder.Columns.Add("FG Qty", typeof(Int32));
+            SpreadsheetReportAdapter.Fill(dtProductionOutputByProcessOrder);
+            dtProductionOutputByProcessOrder.Columns["FG Qty"].SetOrdinal(4);
+            selectionSQL = "SELECT [Order], [Material] AS [Item No], [Material description] AS [Item Description], [Batch] AS [Lot No], [Movement Type], [Unit of Entry (=ERFME)] AS [UOM], " +
                       "[Quantity in unit of entry (ERFME)] AS [RM Qty] FROM [Sheet1$] WHERE [Movement Type] IN ('261', '262') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')";
-            RptAdapter = new OleDbDataAdapter(strConn, RptConn);
-            DataTable dtBomRptD = new DataTable();
-            dtBomRptD.Columns.Add("RM Qty", typeof(decimal));
-            RptAdapter.Fill(dtBomRptD);//table dtBomRptD represents all input RMs (101 means quantity increase while 102 means qty decrease)
-            dtBomRptD.Columns["RM Qty"].SetOrdinal(4);
+            SpreadsheetReportAdapter = new OleDbDataAdapter(selectionSQL, SpreadsheetReportConn);
+            DataTable dtProductionInputByProcessOrder = new DataTable();
+            dtProductionInputByProcessOrder.Columns.Add("RM Qty", typeof(decimal));
+            SpreadsheetReportAdapter.Fill(dtProductionInputByProcessOrder);
+            dtProductionInputByProcessOrder.Columns["RM Qty"].SetOrdinal(4);
        
+            SpreadsheetReportAdapter.Dispose();
+            SpreadsheetReportConn.Dispose();
 
-            RptAdapter.Dispose();
-            RptConn.Dispose();
-            if (dtBomRptM.Rows.Count == 0 || dtBomRptD.Rows.Count == 0)
+            if (dtProductionOutputByProcessOrder.Rows.Count == 0 || dtProductionInputByProcessOrder.Rows.Count == 0)
             {
-                MessageBox.Show("There is no data.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                dtBomRptM.Dispose();
-                dtBomRptD.Dispose();
-                return message1;
-            }
+                MessageBox.Show("There is no data for either FG output or RM input.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                dtProductionOutputByProcessOrder.Dispose();
+                dtProductionInputByProcessOrder.Dispose();
+                return messageToBeReturned;
+            };
 
-            DataRow[]  drow = dtBomRptM.Select("[Movement Type] = '102'");// FG qty decrease in case there is wrong FG output which needs to be corrected
-            foreach (DataRow dr in drow)  //Apr.8.2017
+            DataRow[]  RecordsWithMovementType102TobeChangedToNegativeQuantity = dtProductionOutputByProcessOrder.Select("[Movement Type] = '102'");// FG qty decrease in case there is wrong FG output which needs to be corrected
+            foreach (DataRow dr in RecordsWithMovementType102TobeChangedToNegativeQuantity)  //Apr.8.2017
             {
                 dr["FG Qty"] = -Convert.ToInt32(dr["FG Qty"].ToString().Trim());
             };
 
-            dtBomRptM.Columns.Remove("UOM");
-            dtBomRptM.Columns.Remove("Movement Type");
+            dtProductionOutputByProcessOrder.Columns.Remove("UOM");
+            dtProductionOutputByProcessOrder.Columns.Remove("Movement Type");
             SqlLib lib = new SqlLib();
             string[] strFieldNameM = { "Order", "Batch No", "FG No", "FG Description", "Inventory Type", "Actual Start Date", "Actual End Date" };
-            DataTable dtRptM = lib.SelectDistinct(dtBomRptM, strFieldNameM);
-            dtRptM.Columns.Add("FG Qty", typeof(Int32));
+            DataTable productionOutputWithoutDuplicatePO_Batch_InvType_Date = lib.SelectDistinct(dtProductionOutputByProcessOrder, strFieldNameM);
+            productionOutputWithoutDuplicatePO_Batch_InvType_Date.Columns.Add("FG Qty", typeof(Int32));
             Regex regex1 = new Regex(@"(-\d\d){3}$"); // Strings look like '%-00-00-00' or '%-12-34-56',  Select method for DataTable does not work well with operator 'LIKE'
             String Temp1 = "";
-            foreach (DataRow dr in dtRptM.Rows)
+            foreach (DataRow dr in productionOutputWithoutDuplicatePO_Batch_InvType_Date.Rows)
             {
-                object obj = dtBomRptM.Compute("SUM([FG Qty])", "[Order]='" + dr["Order"].ToString().Trim() + "'");
-                dr["FG Qty"] = Convert.ToInt32(obj.ToString().Trim());
+                object totalOutputQuantityByProcessOrder = dtProductionOutputByProcessOrder.Compute("SUM([FG Qty])", "[Order]='" + dr["Order"].ToString().Trim() + "'");
+                dr["FG Qty"] = Convert.ToInt32(totalOutputQuantityByProcessOrder.ToString().Trim());
                 Temp1 = dr["FG Description"].ToString().Trim();
                 if (!regex1.IsMatch(Temp1)) { dr["FG Description"] = Temp1  + "-BAG-99-99-99"; };
             }
-            dtBomRptM.Dispose();  
-            drow = dtRptM.Select("[FG Qty] <= 0");
-            foreach (DataRow dr in drow) { dtRptM.Rows.Remove(dr); };
-            //drow = dtRptM.Select("[FG Description] NOT LIKE '%-00'");
-            //foreach (DataRow dr in drow) { dr["FG Description"] = dr["FG Description"].ToString().Trim() + "-BAG-99-99-99"; };
+            dtProductionOutputByProcessOrder.Dispose();
 
+            DataRow[] drow = productionOutputWithoutDuplicatePO_Batch_InvType_Date.Select("[FG Qty] <= 0");
+            foreach (DataRow dr in drow) { productionOutputWithoutDuplicatePO_Batch_InvType_Date.Rows.Remove(dr); };
+            productionOutputWithoutDuplicatePO_Batch_InvType_Date.AcceptChanges();
 
-            dtBomRptM.AcceptChanges();
-
-            drow = dtBomRptD.Select("[UOM] = 'G'");
-            if (drow.Length > 0)
+            DataRow[] RecordsWithUOM_G_ToBeChangedToKG = dtProductionInputByProcessOrder.Select("[UOM] = 'G'");
+            foreach (DataRow dr in RecordsWithUOM_G_ToBeChangedToKG)
             {
-                foreach (DataRow dr in drow)
-                {
-                    decimal dRmQty = Convert.ToDecimal(dr["RM Qty"].ToString().Trim());
-                    dr["RM Qty"] = Math.Round(dRmQty / 1000, 6);
-                    dr["UOM"] = "KG";
-                }
+                decimal dRmQty = Convert.ToDecimal(dr["RM Qty"].ToString().Trim());
+                dr["RM Qty"] = Math.Round(dRmQty / 1000, 6);
+                dr["UOM"] = "KG";
             }
-            drow = dtBomRptD.Select("[Movement Type] = '262'");
-            foreach (DataRow dr in drow)  //Apr.8.2017
+
+            DataRow[] RecordsWithMovementType262TobeChangedToNegativeQuantity = dtProductionInputByProcessOrder.Select("[Movement Type] = '262'");
+            foreach (DataRow dr in RecordsWithMovementType262TobeChangedToNegativeQuantity)  
             {
                 dr["RM Qty"] = - Math.Round(Convert.ToDecimal(double.Parse(dr["RM Qty"].ToString().Trim())),6);
             };
 
 
-            dtBomRptD.Columns.Remove("UOM");
-            dtBomRptD.Columns.Remove("Movement Type");
+            dtProductionInputByProcessOrder.Columns.Remove("UOM");
+            dtProductionInputByProcessOrder.Columns.Remove("Movement Type");
             string[] strFieldNameD = { "Order", "Item No", "Item Description", "Lot No" };
-            DataTable dtRptD = lib.SelectDistinct(dtBomRptD, strFieldNameD);
-            dtRptD.Columns.Add("RM Qty", typeof(decimal));
-            foreach (DataRow dr in dtRptD.Rows)
+            DataTable productionIntputWithoutDuplicatePO_RM_LotNo = lib.SelectDistinct(dtProductionInputByProcessOrder, strFieldNameD);
+            productionIntputWithoutDuplicatePO_RM_LotNo.Columns.Add("RM Qty", typeof(decimal));
+            foreach (DataRow dr in productionIntputWithoutDuplicatePO_RM_LotNo.Rows)
             {
-                object obj = dtBomRptD.Compute("SUM([RM Qty])", "[Order]='" + dr["Order"].ToString().Trim() + "' AND [Item No]='" + dr["Item No"].ToString().Trim() + "' AND [Lot No]='" + dr["Lot No"].ToString().Trim() + "'");
-                dr["RM Qty"] = Math.Round(Convert.ToDecimal(double.Parse(obj.ToString().Trim())), 6);
+                object totalRMquantityByProcessOrder = dtProductionInputByProcessOrder.Compute("SUM([RM Qty])", "[Order]='" + dr["Order"].ToString().Trim() + "' AND [Item No]='" + dr["Item No"].ToString().Trim() + "' AND [Lot No]='" + dr["Lot No"].ToString().Trim() + "'");
+                dr["RM Qty"] = Math.Round(Convert.ToDecimal(double.Parse(totalRMquantityByProcessOrder.ToString().Trim())), 6);
             }
-            dtBomRptD.Dispose();
-            drow = dtRptD.Select("[RM Qty] <= 0");
-            if (drow.Length > 0) { foreach (DataRow dr in drow) { dtRptD.Rows.Remove(dr); } };           
-            dtRptD.Columns.Add("Line No", typeof(Int32));
+            dtProductionInputByProcessOrder.Dispose();
+            drow = productionIntputWithoutDuplicatePO_RM_LotNo.Select("[RM Qty] <= 0");
+            foreach (DataRow dr in drow) { productionIntputWithoutDuplicatePO_RM_LotNo.Rows.Remove(dr);};           
+            productionIntputWithoutDuplicatePO_RM_LotNo.Columns.Add("Line No", typeof(Int32));
             string strOrder = string.Empty;
             int iLineNo = 0;
             
-            foreach (DataRow dr in dtRptD.Rows)
+            foreach (DataRow dr in productionIntputWithoutDuplicatePO_RM_LotNo.Rows)
             {
                 if (String.Compare(dr["Order"].ToString().Trim(), strOrder) != 0)
                 {
@@ -1179,19 +1171,20 @@ namespace eCustoms
                     dr["Line No"] = iLineNo;
                 }
             }
-            dtRptD.AcceptChanges();
+            productionIntputWithoutDuplicatePO_RM_LotNo.AcceptChanges();
 
-            dtRptM.Columns.Add("Total Input Qty", typeof(decimal));
-            dtRptM.Columns.Add("Drools Qty", typeof(decimal));
-            foreach (DataRow dr in dtRptM.Rows)
+            productionOutputWithoutDuplicatePO_Batch_InvType_Date.Columns.Add("Total Input Qty", typeof(decimal));
+            productionOutputWithoutDuplicatePO_Batch_InvType_Date.Columns.Add("Drools Qty", typeof(decimal));
+            foreach (DataRow dr in productionOutputWithoutDuplicatePO_Batch_InvType_Date.Rows)
             {
-                decimal dFgQty = Math.Round(Convert.ToDecimal(double.Parse(dr["FG Qty"].ToString().Trim())), 6);
-                DataRow[] datarow = dtRptD.Select("[Order]='" + dr["Order"].ToString().Trim() + "'");
+                decimal FinishedGoodsQuantity = Math.Round(Convert.ToDecimal(double.Parse(dr["FG Qty"].ToString().Trim())), 6);
+                DataRow[] datarow = productionIntputWithoutDuplicatePO_RM_LotNo.Select("[Order]='" + dr["Order"].ToString().Trim() + "'");
                 if (datarow.Length > 0)
                 {
-                    object obj = dtRptD.Compute("SUM([RM Qty])", "[Order]='" + dr["Order"].ToString().Trim() + "'");
-                    dr["Total Input Qty"] = Math.Round(Convert.ToDecimal(double.Parse(obj.ToString().Trim())), 6);
-                    dr["Drools Qty"] = Math.Round(Convert.ToDecimal(double.Parse(obj.ToString().Trim())), 6) - dFgQty;
+                    object totalRMquantity = productionIntputWithoutDuplicatePO_RM_LotNo.Compute("SUM([RM Qty])", "[Order]='" + dr["Order"].ToString().Trim() + "'");
+                    decimal totalRMqtyInDecimal = Math.Round(Convert.ToDecimal(double.Parse(totalRMquantity.ToString().Trim())), 6);
+                    dr["Total Input Qty"] = totalRMqtyInDecimal;
+                    dr["Drools Qty"] = totalRMqtyInDecimal - FinishedGoodsQuantity;
                 }
                 else
                 {
@@ -1200,68 +1193,70 @@ namespace eCustoms
                 }
             }
             //Check if there is any wrong cases that Total input Qty is less than output FG Qty
-            drow = dtRptM.Select("[Total Input Qty] <= [FG Qty]");
-            foreach(DataRow dr1 in drow)
+            drow = productionOutputWithoutDuplicatePO_Batch_InvType_Date.Select("[Total Input Qty] <= [FG Qty]");
+            if (drow.Length > 0)
             {
-                message1 += dr1["Order"].ToString()+";";
-            };
-            if (!String.IsNullOrEmpty(message1))
-            {
-                message1 = "\nIssues: Total input RM qty <= output FG qty for below process orders.\n" + message1; 
+                foreach (DataRow dr1 in drow)
+                {
+                    messageToBeReturned += dr1["Order"].ToString() + ";";
+                };
+                messageToBeReturned = "\nIssues: Total input RM qty <= output FG qty for below process orders.\n" + messageToBeReturned;
             };
 
-            drow = dtRptM.Select("[Total Input Qty] = 0 OR [Drools Qty] <= 0");
+            drow = productionOutputWithoutDuplicatePO_Batch_InvType_Date.Select("[Total Input Qty] = 0 OR [Drools Qty] <= 0");
             foreach (DataRow dr in drow) { dr.Delete(); };
-            dtRptM.AcceptChanges();
-            DataTable dtBomRpt = lib.MergeDataTable(dtRptD, dtRptM, "Order");
-            lib.Dispose(0);
-            dtRptM.Dispose();
-            dtRptD.Dispose();
-            dtBomRpt.Columns["Order"].ColumnName = "Process Order No";
-            dtBomRpt.Columns["Actual Start Date"].SetOrdinal(1);
-            dtBomRpt.Columns["Actual End Date"].SetOrdinal(2);
-            dtBomRpt.Columns["Batch No"].SetOrdinal(3);
-            dtBomRpt.Columns["FG No"].SetOrdinal(4);
-            dtBomRpt.Columns["FG Description"].SetOrdinal(5);
-            dtBomRpt.Columns["Line No"].SetOrdinal(6);
-            dtBomRpt.Columns["Item No"].SetOrdinal(7);
-            dtBomRpt.Columns["Item Description"].SetOrdinal(8);
-            dtBomRpt.Columns["Lot No"].SetOrdinal(9);
-            dtBomRpt.Columns["Inventory Type"].SetOrdinal(10);
-            dtBomRpt.Columns["FG Qty"].SetOrdinal(11);
-            dtBomRpt.Columns["RM Qty"].SetOrdinal(12);
-            dtBomRpt.Columns["Total Input Qty"].SetOrdinal(13);
-            drow = dtBomRpt.Select("([Batch No] IS NULL OR [Batch No] = '') OR ([Item No] IS NULL OR [Item No] = '')");
-            foreach (DataRow dr in drow) { dtBomRpt.Rows.Remove(dr); };
-            //if RM item No. can be found in BOM FG NO list (Table C_BOM), add a suffix to the field of item description for further special process
-            foreach(DataRow itemNo1 in dtBomRpt.Rows) 
-            {
-                if (dtFGno_BatchNoListInBOM.Select("[FG No] = '" + itemNo1["Item No"].ToString() + "'").Length > 0)
-                { itemNo1["Item Description"] = itemNo1["Item Description"].ToString().Trim() + "-INTERMEDIATE"; };//Add this one to make it applicable to both intermediate FG and recycle FG as input; Apr.8.2017
-            };
-            dtBomRpt.AcceptChanges();
+            productionOutputWithoutDuplicatePO_Batch_InvType_Date.AcceptChanges();
 
-            //June.26.2017 if item Batch No can be found in table C_BOM (FG BOM list) and relevant FG no. is different, need special mark for further action like replacing FG No.
-            foreach (DataRow itemNo1 in dtBomRpt.Rows)
+            DataTable productionInputAndOutputDetailsPerProessOrder = lib.leftJoinDatatablesOnKeyColumn(productionIntputWithoutDuplicatePO_RM_LotNo, productionOutputWithoutDuplicatePO_Batch_InvType_Date, "Order");
+            lib.Dispose(0);
+            productionOutputWithoutDuplicatePO_Batch_InvType_Date.Dispose();
+            productionIntputWithoutDuplicatePO_RM_LotNo.Dispose();
+
+            productionInputAndOutputDetailsPerProessOrder.Columns["Order"].ColumnName = "Process Order No";
+            productionInputAndOutputDetailsPerProessOrder.Columns["Actual Start Date"].SetOrdinal(1);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Actual End Date"].SetOrdinal(2);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Batch No"].SetOrdinal(3);
+            productionInputAndOutputDetailsPerProessOrder.Columns["FG No"].SetOrdinal(4);
+            productionInputAndOutputDetailsPerProessOrder.Columns["FG Description"].SetOrdinal(5);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Line No"].SetOrdinal(6);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Item No"].SetOrdinal(7);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Item Description"].SetOrdinal(8);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Lot No"].SetOrdinal(9);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Inventory Type"].SetOrdinal(10);
+            productionInputAndOutputDetailsPerProessOrder.Columns["FG Qty"].SetOrdinal(11);
+            productionInputAndOutputDetailsPerProessOrder.Columns["RM Qty"].SetOrdinal(12);
+            productionInputAndOutputDetailsPerProessOrder.Columns["Total Input Qty"].SetOrdinal(13);
+            drow = productionInputAndOutputDetailsPerProessOrder.Select("([Batch No] IS NULL OR [Batch No] = '') OR ([Item No] IS NULL OR [Item No] = '')");
+            foreach (DataRow dr in drow) { productionInputAndOutputDetailsPerProessOrder.Rows.Remove(dr); };
+            //if RM item No. can be found in BOM FG NO list (Table C_BOM), add a suffix to the field of item description for further special process
+            foreach(DataRow itemNo1 in productionInputAndOutputDetailsPerProessOrder.Rows) 
             {
-                if (dtFGno_BatchNoListInBOM.Select("[Batch No] = '" + itemNo1["Lot No"].ToString() + "' And [FG No] <> '" + itemNo1["Item No"].ToString() + "'").Length > 0)
+                if (FG_and_BatchNoListFromTableOverviewBOM.Select("[FG No] = '" + itemNo1["Item No"].ToString() + "'").Length > 0)
+                { itemNo1["Item Description"] = itemNo1["Item Description"].ToString().Trim() + "-ExplosionToNextLevelBOM"; };//Add this one to make it applicable to both intermediate FG and recycle FG as input;
+            };
+            productionInputAndOutputDetailsPerProessOrder.AcceptChanges();
+
+            //If item Batch No can be found in table C_BOM (FG BOM list) and relevant FG no. is different (FG item is changed to recycle item number), need special mark for further action like replacing FG No.
+            foreach (DataRow itemNo1 in productionInputAndOutputDetailsPerProessOrder.Rows)
+            {
+                if (FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No] = '" + itemNo1["Lot No"].ToString() + "' And [FG No] <> '" + itemNo1["Item No"].ToString() + "'").Length > 0)
                 {
                     if (regex1.IsMatch(itemNo1["Item Description"].ToString().Trim()))//check if Item description fits the cretiria of Finished Goods description (C-code description)
                     {
-                        String abcExample1 = dtFGno_BatchNoListInBOM.Select("[Batch No] = '" + itemNo1["Lot No"].ToString() +"'")[0]["FG No"].ToString();
+                        String abcExample1 = FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No] = '" + itemNo1["Lot No"].ToString() +"'")[0]["FG No"].ToString();
                         itemNo1["Item No"] = abcExample1;//Replace item no.
-                        itemNo1["Item Description"] = itemNo1["Item Description"].ToString().Trim() + "-C-CODE-INTERMEDIATE"; 
-                    }
+                        itemNo1["Item Description"] = itemNo1["Item Description"].ToString().Trim() + "-C-CODE-ExplosionToNextLevelBOM"; 
+                    };
                 };
             };
-            dtBomRpt.AcceptChanges();
+            productionInputAndOutputDetailsPerProessOrder.AcceptChanges();
             
             //Exceptional issues 1 to be reported out: cannot find Item No and Lot NO. in table C_BOM ([FG NO] and [Batch No])
-            foreach (DataRow itemNo1LotNo1 in dtBomRpt.Select("[Item Description] LIKE '%-INTERMEDIATE'"))
+            foreach (DataRow itemNo1LotNo1 in productionInputAndOutputDetailsPerProessOrder.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'"))
             {
-                if (dtFGno_BatchNoListInBOM.Select("[FG No] = '" + itemNo1LotNo1["Item No"].ToString() + "' And [Batch NO] = '" + itemNo1LotNo1["Lot No"].ToString() + "'").Length == 0)
+                if (FG_and_BatchNoListFromTableOverviewBOM.Select("[FG No] = '" + itemNo1LotNo1["Item No"].ToString() + "' And [Batch NO] = '" + itemNo1LotNo1["Lot No"].ToString() + "'").Length == 0)
                 { 
-                    message1 += "\nThe following RM Item No and Lot No cannot be found in BOM history: Process order;RM Item No;Lot No\n " + itemNo1LotNo1["Process Order No"] + ";" + itemNo1LotNo1["Item No"].ToString() + ";" + itemNo1LotNo1["Lot No"].ToString();
+                    messageToBeReturned += "\nThe following RM Item No and Lot No cannot be found in BOM history: Process order;RM Item No;Lot No\n " + itemNo1LotNo1["Process Order No"] + ";" + itemNo1LotNo1["Item No"].ToString() + ";" + itemNo1LotNo1["Lot No"].ToString();
                     DataRow dr = dtMessage.NewRow();
                     dr[0] = "Process order, RM Item No and Lot No cannot be found in BOM history";
                     dr[1] = itemNo1LotNo1["Process Order No"].ToString();
@@ -1270,9 +1265,9 @@ namespace eCustoms
                     dtMessage.Rows.Add(dr);
                 };
                 //if we can find a revised batch in BOM history, replace old batch No. with a new one like 'XXXXXXXXXXR'
-                if (dtFGno_BatchNoListInBOM.Select("[FG No] = '" + itemNo1LotNo1["Item No"].ToString() + "' And [Batch NO] = '" + itemNo1LotNo1["Lot No"].ToString() + "R'").Length > 0)
+                if (FG_and_BatchNoListFromTableOverviewBOM.Select("[FG No] = '" + itemNo1LotNo1["Item No"].ToString() + "' And [Batch NO] = '" + itemNo1LotNo1["Lot No"].ToString() + "R'").Length > 0)
                 {
-                    message1 += "\n This batch has a revised on in BOM history with suffix 'R': " + itemNo1LotNo1["Lot No"].ToString() + "R;" + "\n " + itemNo1LotNo1["Process Order No"] + ";" + itemNo1LotNo1["Item No"].ToString() + ";" + itemNo1LotNo1["Lot No"].ToString();
+                    messageToBeReturned += "\n This batch has a revised on in BOM history with suffix 'R': " + itemNo1LotNo1["Lot No"].ToString() + "R;" + "\n " + itemNo1LotNo1["Process Order No"] + ";" + itemNo1LotNo1["Item No"].ToString() + ";" + itemNo1LotNo1["Lot No"].ToString();
                     DataRow dr = dtMessage.NewRow();
                     dr[0] = "This batch has a revised version in BOM history with suffix 'R': " + itemNo1LotNo1["Lot No"].ToString() + "R ";
                     dr[1] = itemNo1LotNo1["Process Order No"].ToString();
@@ -1282,13 +1277,13 @@ namespace eCustoms
                 };
             };
             //Exceptional issues2 to be reported out: RM or component item has the description like FG item description, but it cannot be found in both FG item list in table C_BOM and RM item list in table C_BOMDetail
-            foreach (DataRow itemNo1LotNo1 in dtBomRpt.Select("[Item Description] NOT LIKE '%-INTERMEDIATE'"))
+            foreach (DataRow itemNo1LotNo1 in productionInputAndOutputDetailsPerProessOrder.Select("[Item Description] NOT LIKE '%-ExplosionToNextLevelBOM'"))
             {
                 if (regex1.IsMatch(itemNo1LotNo1["Item Description"].ToString()))
                 {
                     if (dtRM_ITEM_ListInBOMDetail.Select("[Item No] = '" + itemNo1LotNo1["Item No"].ToString() + "'").Length == 0)
                     {
-                        message1 += "\nThe following RM Item No looks like finished goods item and cannot be found in both FG and RM item list: Process order;RM Item No;Lot No\n " + itemNo1LotNo1["Process Order No"].ToString() + ";" + itemNo1LotNo1["Item No"].ToString() + ";" + itemNo1LotNo1["Lot No"].ToString();
+                        messageToBeReturned += "\nThe following RM Item No looks like finished goods item and cannot be found in both FG and RM item list: Process order;RM Item No;Lot No\n " + itemNo1LotNo1["Process Order No"].ToString() + ";" + itemNo1LotNo1["Item No"].ToString() + ";" + itemNo1LotNo1["Lot No"].ToString();
                         DataRow dr = dtMessage.NewRow();
                         dr[0] = "The following RM Item No looks like finished goods item and cannot be found in both FG and RM item list.";
                         dr[1] = itemNo1LotNo1["Process Order No"].ToString() ;
@@ -1305,12 +1300,12 @@ namespace eCustoms
             Microsoft.Office.Interop.Excel.Worksheet worksheet = (Microsoft.Office.Interop.Excel.Worksheet)workbook.Worksheets[1];
 
             worksheet.Name = "Sheet1";
-            for (int i = 0; i < dtBomRpt.Rows.Count; i++)
+            for (int i = 0; i < productionInputAndOutputDetailsPerProessOrder.Rows.Count; i++)
             {
-                for (int j = 0; j < dtBomRpt.Columns.Count; j++)
-                { worksheet.Cells[i + 2, j + 1] = "'" + dtBomRpt.Rows[i][j].ToString().Trim(); }
+                for (int j = 0; j < productionInputAndOutputDetailsPerProessOrder.Columns.Count; j++)
+                { worksheet.Cells[i + 2, j + 1] = "'" + productionInputAndOutputDetailsPerProessOrder.Rows[i][j].ToString().Trim(); }
             }
-            for (int k = 0; k < dtBomRpt.Columns.Count; k++) { worksheet.Cells[1, k + 1] = dtBomRpt.Columns[k].ColumnName.Trim(); }
+            for (int k = 0; k < productionInputAndOutputDetailsPerProessOrder.Columns.Count; k++) { worksheet.Cells[1, k + 1] = productionInputAndOutputDetailsPerProessOrder.Columns[k].ColumnName.Trim(); }
             worksheet.Cells.EntireColumn.AutoFit();
 
             if (dtMessage.Rows.Count >0)
@@ -1334,11 +1329,20 @@ namespace eCustoms
             excel.Visible = true;
             System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
             excel = null;
-            dtBomRpt.Dispose();
+            productionInputAndOutputDetailsPerProessOrder.Dispose();
 
-            return message1;
+            return messageToBeReturned;
         }
 
-        
+        private String getOleBbConnnectionStringPerSpeadsheetFileExtension(string pathAndFileName)
+        {
+            if (pathAndFileName.ToLower().Contains(".xlsx"))
+            { return @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + pathAndFileName + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
+            else
+            { return @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + pathAndFileName + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
+        }
+
     }
+
+
 }

@@ -387,7 +387,7 @@ namespace eCustoms
                 sqlAdp.Fill(dtDestination);
                 sqlAdp.Dispose();
                 SqlLib sqlLib = new SqlLib();
-                DataTable dtMergeData = sqlLib.MergeDataTable(dvFillPD.ToTable(), dtDestination, "Destination");
+                DataTable dtMergeData = sqlLib.leftJoinDatatablesOnKeyColumn(dvFillPD.ToTable(), dtDestination, "Destination");
                 sqlLib.Dispose(0);
                 dtDestination.Dispose();
 
