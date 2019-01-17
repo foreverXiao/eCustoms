@@ -39,13 +39,6 @@ namespace eCustoms
         {
             SqlConnection gdConn = new SqlConnection(SqlLib.StrSqlConnection);
             if (gdConn.State == ConnectionState.Closed) { gdConn.Open(); }
-            //string strSQL = "SELECT [GongDan No] AS [工单号], N'加工' AS [生产类型], [FG No] + '/' + [Batch No] AS [成品备件号], [GongDan Qty] AS [工单数量], " +
-            //                "0 AS [项号], [RM EHB] AS [物料备件号], [RM Used Qty] AS [物料耗用数量], [CN] AS [原产国], [BGD No] AS [批次号], [BOM In Customs] FROM (" +
-            //                "SELECT M.[GongDan No], SUBSTRING(M.[FG Description],0,CHARINDEX('-',M.[FG Description],CHARINDEX('-',M.[FG Description],0)+1)) AS [FG No], " + 
-            //                "M.[Batch No], M.[GongDan Qty], [RM EHB], B.[CN], SUM(CAST(M.[RM Used Qty] AS decimal(18,6))) AS [RM Used Qty], M.[BGD No], " + 
-            //                "M.[BOM In Customs] FROM M_DailyGongDan AS M LEFT OUTER JOIN B_Country AS B ON M.[Destination] = B.[EN] " + 
-            //                "WHERE M.[RM Used Qty] > 0.0 GROUP BY M.[GongDan No], M.[FG Description], M.[Batch No], [GongDan Qty], M.[RM EHB], B.[CN], " + 
-            //                "M.[BGD No], M.[BOM In Customs]) AS tbgd";
             string strSQL = "SELECT [GongDan No] AS [工单号], N'加工' AS [生产类型], [FG No] + '/' + [Batch No] AS [成品备件号], [GongDan Qty] AS [工单数量], " +
                             "0 AS [项号], [RM EHB] AS [物料备件号], [RM Used Qty] AS [物料耗用数量], [CN] AS [原产国], [BGD No] AS [批次号], [BOM In Customs] FROM ( " +
                             "SELECT M.[GongDan No], SUBSTRING(M.[FG Description],0,CHARINDEX('-',M.[FG Description],CHARINDEX('-',M.[FG Description],0)+1)) AS [FG No], " +
@@ -183,14 +176,6 @@ namespace eCustoms
                 apprGdAdap.SelectCommand = apprGdComm;
                 DataTable dtApprGongDanD = new DataTable();
                 apprGdAdap.Fill(dtApprGongDanD);
-                //apprGdComm.CommandText = "SELECT [GongDan No] AS [工单号], N'加工' AS [生产类型], [FG No] + '/' + [Batch No] AS [成品备件号], [GongDan Qty] AS [工单数量], " + 
-                //                         "ROW_NUMBER() OVER (ORDER BY [RM EHB], [BGD No]) AS [项号], [RM EHB] AS [物料备件号], [RM Used Qty] AS [物料耗用数量], " + 
-                //                         "[CN] AS [原产国], [BGD No] AS [批次号], [BOM In Customs], '" + dtApproved + "' AS [Created Date] FROM (" +
-                //                         "SELECT M.[GongDan No], SUBSTRING(M.[FG Description],0,CHARINDEX('-',M.[FG Description],CHARINDEX('-',M.[FG Description],0)+1)) AS [FG No], " + 
-                //                         "M.[Batch No], M.[GongDan Qty], M.[RM EHB], CAST(SUM(M.[RM Used Qty]) AS decimal(18, 6)) AS [RM Used Qty], B.[CN], " + 
-                //                         "M.[BGD No], M.[BOM In Customs] FROM M_DailyGongDan AS M LEFT OUTER JOIN B_Country AS B ON M.[Destination] = B.[EN] " +
-                //                         "WHERE [RM Used Qty] > 0.0 GROUP BY M.[GongDan No], M.[FG Description], M.[Batch No], M.[GongDan Qty], M.[RM EHB], B.[CN], " +
-                //                         "M.[BGD No], M.[BOM In Customs] HAVING [GongDan No] = @GongDanNo) tbgdd";
                 apprGdComm.CommandText = "SELECT [GongDan No] AS [工单号], N'加工' AS [生产类型], [FG No] + '/' + [Batch No] AS [成品备件号], [GongDan Qty] AS [工单数量], " +
                                          "ROW_NUMBER() OVER (ORDER BY [RM EHB], [BGD No]) AS [项号], [RM EHB] AS [物料备件号], [RM Used Qty] AS [物料耗用数量], " +
                                          "[CN] AS [原产国], [BGD No] AS [批次号], [BOM In Customs], '" + dtApproved + "' AS [Created Date] FROM (" +
@@ -205,40 +190,36 @@ namespace eCustoms
                 apprGdAdap.Fill(dtApprGongDanDoc);
 
                 /*------ check and update 'RM-D' IEType to 'RMB-1418' or 'RMB-D' ------*/
-                apprGdComm.CommandText = "SELECT [GongDan No], [IsAllocated] FROM (SELECT M.[GongDan No], B.[IsAllocated], MAX(M.[Line No]) Line, " + 
-                                         "COUNT(M.[GongDan No]) CountNo FROM M_DailyGongDan AS M LEFT JOIN (SELECT DISTINCT [Grade], [IsAllocated] FROM B_HsCode) AS B " +
-                                         "ON SUBSTRING(M.[FG Description], 0, CHARINDEX('-', M.[FG Description], 0)) = B.[Grade] " +
-                                         "WHERE M.[IE Type] = 'RM-D' AND M.[RM Category] = 'USD' AND M.[Consumption] > 0.0 GROUP BY M.[GongDan No], " +
-                                         "B.[IsAllocated] HAVING [GongDan No] = @GongDanNo) AS dtie WHERE Line = CountNo";
-                //apprGdComm.CommandText = "SELECT [GongDan No], [IsAllocated] FROM (SELECT M.[GongDan No], B.[IsAllocated], MAX(M.[Line No]) Line, " +
-                //                         "COUNT(M.[GongDan No]) CountNo FROM M_DailyGongDan AS M LEFT JOIN (SELECT DISTINCT [Legacy Code], [IsAllocated] FROM B_HS) AS B " +
-                //                         "ON SUBSTRING(M.[FG Description],0,CHARINDEX('-',M.[FG Description],CHARINDEX('-',M.[FG Description],0)+1)) = B.[Legacy Code] " +
+                //apprGdComm.CommandText = "SELECT [GongDan No], [IsAllocated] FROM (SELECT M.[GongDan No], B.[IsAllocated], MAX(M.[Line No]) Line, " + 
+                //                         "COUNT(M.[GongDan No]) CountNo FROM M_DailyGongDan AS M LEFT JOIN (SELECT DISTINCT [Grade], [IsAllocated] FROM B_HsCode) AS B " +
+                //                         "ON SUBSTRING(M.[FG Description], 0, CHARINDEX('-', M.[FG Description], 0)) = B.[Grade] " +
                 //                         "WHERE M.[IE Type] = 'RM-D' AND M.[RM Category] = 'USD' AND M.[Consumption] > 0.0 GROUP BY M.[GongDan No], " +
                 //                         "B.[IsAllocated] HAVING [GongDan No] = @GongDanNo) AS dtie WHERE Line = CountNo";
-                apprGdAdap.SelectCommand = apprGdComm;
-                DataTable dtChangeIE = new DataTable();
-                apprGdAdap.Fill(dtChangeIE);
-                apprGdAdap.Dispose();
-                foreach(DataRow drChangeIE in dtChangeIE.Rows)
-                {
-                    string strGD = drChangeIE[0].ToString().Trim();
-                    string strAllocated = drChangeIE[1].ToString().Trim();
-                    DataRow[] drow = dtApprGongDanM.Select("[GongDan No] = '" + strGD + "'");
-                    if (drow.Length > 0)
-                    {
-                        if (String.Compare(strAllocated, "True") == 0) 
-                        { 
-                            foreach (DataRow dr in drow) { dr["IE Type"] = "RMB-D"; }
-                            strGongDanRecord += strGD + " : RMB-D\n";
-                        }
-                        else 
-                        {
-                            foreach (DataRow dr in drow) { dr["IE Type"] = "RMB-1418"; }
-                            strGongDanRecord += strGD + " : RMB-1418\n";
-                        }
-                    }                 
-                }                
-                dtChangeIE.Dispose();
+                //apprGdAdap.SelectCommand = apprGdComm;
+                //DataTable dtChangeIE = new DataTable();
+                //apprGdAdap.Fill(dtChangeIE);
+                //apprGdAdap.Dispose();
+                //foreach(DataRow drChangeIE in dtChangeIE.Rows)
+                //{
+                //    string strGD = drChangeIE[0].ToString().Trim();
+                //    string strAllocated = drChangeIE[1].ToString().Trim();
+                //    DataRow[] drow = dtApprGongDanM.Select("[GongDan No] = '" + strGD + "'");
+                //    if (drow.Length > 0)
+                //    {
+                //        if (String.Compare(strAllocated, "True") == 0) 
+                //        { 
+                //            //foreach (DataRow dr in drow) { dr["IE Type"] = "RMB-D"; }
+                //            //strGongDanRecord += strGD + " : RMB-D\n";
+                //        }
+                //        else 
+                //        {
+                //            foreach (DataRow dr in drow) { dr["IE Type"] = "RMB-1418"; }
+                //            strGongDanRecord += strGD + " : RMB-1418\n";
+                //        }
+                //    }                 
+                //}                
+                //dtChangeIE.Dispose();
+
                 dtApprGongDanM.AcceptChanges();
 
                 #region //Update C_BOM table's column: GongDan Used Qty

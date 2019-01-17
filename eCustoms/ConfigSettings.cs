@@ -20,6 +20,19 @@ namespace eCustoms
 
     }
 
+    public class funcLib
+    {
+        public static String getExcelFileToBeUploaded(TextBox txtPath)
+        {
+            OpenFileDialog openDlg = new OpenFileDialog();
+            openDlg.Filter = "Excel Files(*.xls;*.xlsx)|*.xls;*.xlsx";
+            openDlg.ShowDialog();
+            txtPath.Text = openDlg.FileName;
+            txtPath.Refresh();
+            return txtPath.Text.Trim();
+        }
+    }
+
 
     public class ConfigSettings
     {

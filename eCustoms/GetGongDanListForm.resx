@@ -464,19 +464,7 @@
         zQAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="btnUploadFile.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        wwAADsMBx2+oZAAAAVFJREFUOE+1k70vBFEUxV9Fp/OVKFESlRKJKEQiK7YSjVZCQaHT+w80NIS/AJ1K
-        srYRhUloFJKZbLKMzK6EkTjeufdNdt/O+ii4yS/v69xz78y8Mf8SweECgr0R3B1PCpxzzx1/HZWLNdwe
-        TQOv18B76GP3ovMiqHFyP3gQleaA9D4PDd08vFy33RTzJmxThBn1U3/dtBee9foGwf44kpshFfyCqDQD
-        5rh0rZ5c9QCPO0Cy+yMsxhyXbkx40gVUDFBdtSabwPOWUt1WsrmMVmO1OQPp4KkDiAtWuNgentW0mGcg
-        L5AdZMT9NmEQeBlz46h99m5bwJ7VOgXf4GC2kcwK9T7LsBIPKNxnsjVhx8xx6RrSBUWs+jalpPOKrCfU
-        sLV6FrwcYsLnTJeBj40GXAsF0Xx7GymIyktIHvSTciRReUXO2t7C1sh+Jo/mi/N3YcwnX2ULSHLQ8AkA
-        AAAASUVORK5CYII=
-</value>
-  </data>
-  <data name="btnSearchFile.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="btnSearchAndUploadFile.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
         wwAADsMBx2+oZAAAAQpJREFUOE9joDqYOHHSf2Q8Z2L9f6gUfgDT8OrDVxT86et3sDhUGW4A09y+/sL/

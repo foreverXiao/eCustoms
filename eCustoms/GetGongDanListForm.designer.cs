@@ -72,9 +72,8 @@
             this.btnExtractData = new System.Windows.Forms.Button();
             this.ckLE = new System.Windows.Forms.CheckBox();
             this.ckSD = new System.Windows.Forms.CheckBox();
-            this.btnUploadFile = new System.Windows.Forms.Button();
             this.txtPath = new System.Windows.Forms.TextBox();
-            this.btnSearchFile = new System.Windows.Forms.Button();
+            this.btnSearchAndUploadFile = new System.Windows.Forms.Button();
             this.gBox.SuspendLayout();
             this.gBoxShow.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -520,9 +519,8 @@
             this.panel2.Controls.Add(this.btnExtractData);
             this.panel2.Controls.Add(this.ckLE);
             this.panel2.Controls.Add(this.ckSD);
-            this.panel2.Controls.Add(this.btnUploadFile);
             this.panel2.Controls.Add(this.txtPath);
-            this.panel2.Controls.Add(this.btnSearchFile);
+            this.panel2.Controls.Add(this.btnSearchAndUploadFile);
             this.panel2.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.panel2.Location = new System.Drawing.Point(1, 1);
             this.panel2.Name = "panel2";
@@ -562,7 +560,7 @@
             this.ckLE.AutoSize = true;
             this.ckLE.Font = new System.Drawing.Font("Microsoft YaHei", 8.5F, System.Drawing.FontStyle.Bold);
             this.ckLE.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.ckLE.Location = new System.Drawing.Point(167, 11);
+            this.ckLE.Location = new System.Drawing.Point(170, 11);
             this.ckLE.Name = "ckLE";
             this.ckLE.Size = new System.Drawing.Size(190, 21);
             this.ckLE.TabIndex = 2;
@@ -573,9 +571,11 @@
             // ckSD
             // 
             this.ckSD.AutoSize = true;
+            this.ckSD.Checked = true;
+            this.ckSD.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ckSD.Font = new System.Drawing.Font("Microsoft YaHei", 8.5F, System.Drawing.FontStyle.Bold);
             this.ckSD.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.ckSD.Location = new System.Drawing.Point(13, 11);
+            this.ckSD.Location = new System.Drawing.Point(4, 11);
             this.ckSD.Name = "ckSD";
             this.ckSD.Size = new System.Drawing.Size(142, 21);
             this.ckSD.TabIndex = 1;
@@ -583,41 +583,27 @@
             this.ckSD.UseVisualStyleBackColor = true;
             this.ckSD.CheckedChanged += new System.EventHandler(this.ckSD_CheckedChanged);
             // 
-            // btnUploadFile
-            // 
-            this.btnUploadFile.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnUploadFile.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnUploadFile.Image = ((System.Drawing.Image)(resources.GetObject("btnUploadFile.Image")));
-            this.btnUploadFile.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnUploadFile.Location = new System.Drawing.Point(366, 33);
-            this.btnUploadFile.Name = "btnUploadFile";
-            this.btnUploadFile.Size = new System.Drawing.Size(100, 33);
-            this.btnUploadFile.TabIndex = 6;
-            this.btnUploadFile.Text = "UploadFile   ";
-            this.btnUploadFile.UseVisualStyleBackColor = true;
-            this.btnUploadFile.Click += new System.EventHandler(this.btnUploadFile_Click);
-            // 
             // txtPath
             // 
             this.txtPath.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
-            this.txtPath.Location = new System.Drawing.Point(120, 39);
+            this.txtPath.Location = new System.Drawing.Point(167, 39);
             this.txtPath.Name = "txtPath";
-            this.txtPath.Size = new System.Drawing.Size(240, 22);
+            this.txtPath.Size = new System.Drawing.Size(301, 22);
             this.txtPath.TabIndex = 5;
             // 
-            // btnSearchFile
+            // btnSearchAndUploadFile
             // 
-            this.btnSearchFile.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnSearchFile.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnSearchFile.Image = ((System.Drawing.Image)(resources.GetObject("btnSearchFile.Image")));
-            this.btnSearchFile.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnSearchFile.Location = new System.Drawing.Point(13, 33);
-            this.btnSearchFile.Name = "btnSearchFile";
-            this.btnSearchFile.Size = new System.Drawing.Size(100, 33);
-            this.btnSearchFile.TabIndex = 4;
-            this.btnSearchFile.Text = "SearchFile   ";
-            this.btnSearchFile.UseVisualStyleBackColor = true;
-            this.btnSearchFile.Click += new System.EventHandler(this.btnSearchFile_Click);
+            this.btnSearchAndUploadFile.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnSearchAndUploadFile.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnSearchAndUploadFile.Image = ((System.Drawing.Image)(resources.GetObject("btnSearchAndUploadFile.Image")));
+            this.btnSearchAndUploadFile.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnSearchAndUploadFile.Location = new System.Drawing.Point(2, 33);
+            this.btnSearchAndUploadFile.Name = "btnSearchAndUploadFile";
+            this.btnSearchAndUploadFile.Size = new System.Drawing.Size(159, 33);
+            this.btnSearchAndUploadFile.TabIndex = 4;
+            this.btnSearchAndUploadFile.Text = "Search And Upload";
+            this.btnSearchAndUploadFile.UseVisualStyleBackColor = true;
+            this.btnSearchAndUploadFile.Click += new System.EventHandler(this.btnSearchAndUploadFile_Click);
             // 
             // GetGongDanListForm
             // 
@@ -659,9 +645,8 @@
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Button btnSearchFile;
+        private System.Windows.Forms.Button btnSearchAndUploadFile;
         private System.Windows.Forms.TextBox txtPath;
-        private System.Windows.Forms.Button btnUploadFile;
         private System.Windows.Forms.CheckBox ckSD;
         private System.Windows.Forms.CheckBox ckLE;
         private System.Windows.Forms.Button btnExtractData;

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="btnSearch.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="btnSearchAndUpload.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
         wwAADsMBx2+oZAAAAQpJREFUOE9joDqYOHHSf2Q8Z2L9f6gUfgDT8OrDVxT86et3sDhUGW4A09y+/sL/
@@ -128,7 +128,7 @@
         GGTr3Llz/5+faAXWfGuiFnGGYAMgwyg2BOaS/wdsKTcEyqUUMDAAAOc7W+2ZQwHlAAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="btnSearchRpt.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="FindAndUploadExcelReport.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
         wwAADsMBx2+oZAAAAShJREFUOE9joAkoWBf0P2GVFRinrXaB01Bp3KDrZDpY4Z5ny/+/+n0PBZ//vgUs
@@ -371,18 +371,6 @@
         RGd3Z3LOM42Lwg9Vp2nuWauT36Q/PzC0Y9ZBRq0D+H97EgVww7gLKvLPklSdCGE/YiHHsQCuJ3chdsYc
         k81tk2Yx4lfokf0IppEcpP1Kgsa95i5EzO7bSKfZMNZ76jiVqBTNBzcHegB3gWZG/c7Mmmk+tB2KmSoe
         yUSKMREa11HdQHUL1U2kWKsSo1I06wBKnLcSZ6zEZikxbaUUYyLeAA1mvQv7pYF1AAAAAElFTkSuQmCC
-</value>
-  </data>
-  <data name="btnUploadBom.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        wwAADsMBx2+oZAAAAX1JREFUOE9joAnYHuz8f7OVERhv87WD01Bp3OByRej/LY6m/7+unvL/z+UNKPj7
-        5ulgOZAaqHJUAJIA2fJz3xwM/PvsWjD+e30dWA1WQ44q8/z/umwiHH+aXofKXjkJjEEGgtRCtUEAyNQt
-        dsb/P06oRuCJNQiMJn4uSBM1TEAmnnGS/f++MeP/h7as/x87s5FwDhiDxEHyIPwqUBfVFSDOSTOR/+8r
-        wv9/qI38/7EpCgO/r44Hy7/NDfx/3VQY04AbdmL/38Wr/P9Q4v7/U60XVgySexMiD1aLYQDIXyAD3qdq
-        /P9YZPL/U6XV/881tmAMYn/I0AbLgwzA8AIo4YDCAKQIrLHF5//XLgRGNuRtlCLYuyA9UO0QADIRFL/f
-        p0X8/zYr6f/zRcVg/GNFIRiDxEHeeJtohBmNIADSDEqyIE2glPh7X8//3wcmgekXq6rB+NncfLAavKkR
-        pACkEJb6QBiUeK40RuLXjAxA/gM5E6QBhEFsDD9TBzAwAABDnLe0Mc/ukgAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="btnSearchBom.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

@@ -36,11 +36,11 @@
             this.label2 = new System.Windows.Forms.Label();
             this.llblMessage = new System.Windows.Forms.LinkLabel();
             this.txtPath = new System.Windows.Forms.TextBox();
-            this.btnSearch = new System.Windows.Forms.Button();
+            this.btnSearchAndUpload = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox = new System.Windows.Forms.GroupBox();
             this.gBoxShow = new System.Windows.Forms.GroupBox();
-            this.btnSearchRpt = new System.Windows.Forms.Button();
+            this.FindAndUploadExcelReport = new System.Windows.Forms.Button();
             this.txtPathRpt = new System.Windows.Forms.TextBox();
             this.btnShow = new System.Windows.Forms.Button();
             this.dgvBOM = new System.Windows.Forms.DataGridView();
@@ -60,7 +60,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.btnUploadBom = new System.Windows.Forms.Button();
             this.txtPathBom = new System.Windows.Forms.TextBox();
             this.btnSearchBom = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
@@ -80,7 +79,7 @@
             this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.llblMessage);
             this.panel1.Controls.Add(this.txtPath);
-            this.panel1.Controls.Add(this.btnSearch);
+            this.panel1.Controls.Add(this.btnSearchAndUpload);
             this.panel1.Controls.Add(this.label1);
             this.panel1.Location = new System.Drawing.Point(1, 2);
             this.panel1.Name = "panel1";
@@ -92,22 +91,22 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft YaHei", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.label3.Location = new System.Drawing.Point(12, 46);
+            this.label3.Location = new System.Drawing.Point(6, 49);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(230, 16);
+            this.label3.Size = new System.Drawing.Size(235, 16);
             this.label3.TabIndex = 3;
-            this.label3.Text = "- Split and resolve the recycle BOM if have";
+            this.label3.Text = "- Breakdown FG compoent into more detail";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
             this.label2.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.label2.Location = new System.Drawing.Point(12, 29);
+            this.label2.Location = new System.Drawing.Point(5, 29);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(247, 16);
+            this.label2.Size = new System.Drawing.Size(261, 16);
             this.label2.TabIndex = 2;
-            this.label2.Text = "- Remove the data if history BOM already had";
+            this.label2.Text = "- Stop the update if BOM exists in history record";
             // 
             // llblMessage
             // 
@@ -115,7 +114,7 @@
             this.llblMessage.Font = new System.Drawing.Font("Microsoft YaHei", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.llblMessage.ForeColor = System.Drawing.Color.Navy;
             this.llblMessage.LinkColor = System.Drawing.Color.Navy;
-            this.llblMessage.Location = new System.Drawing.Point(590, 41);
+            this.llblMessage.Location = new System.Drawing.Point(591, 41);
             this.llblMessage.Name = "llblMessage";
             this.llblMessage.Size = new System.Drawing.Size(87, 17);
             this.llblMessage.TabIndex = 6;
@@ -126,24 +125,24 @@
             // txtPath
             // 
             this.txtPath.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
-            this.txtPath.Location = new System.Drawing.Point(264, 8);
+            this.txtPath.Location = new System.Drawing.Point(266, 8);
             this.txtPath.Name = "txtPath";
             this.txtPath.Size = new System.Drawing.Size(413, 22);
             this.txtPath.TabIndex = 4;
             // 
-            // btnSearch
+            // btnSearchAndUpload
             // 
-            this.btnSearch.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSearch.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnSearch.Image = ((System.Drawing.Image)(resources.GetObject("btnSearch.Image")));
-            this.btnSearch.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnSearch.Location = new System.Drawing.Point(263, 34);
-            this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(207, 33);
-            this.btnSearch.TabIndex = 5;
-            this.btnSearch.Text = "Search  and Upload";
-            this.btnSearch.UseVisualStyleBackColor = true;
-            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            this.btnSearchAndUpload.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSearchAndUpload.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnSearchAndUpload.Image = ((System.Drawing.Image)(resources.GetObject("btnSearchAndUpload.Image")));
+            this.btnSearchAndUpload.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnSearchAndUpload.Location = new System.Drawing.Point(265, 34);
+            this.btnSearchAndUpload.Name = "btnSearchAndUpload";
+            this.btnSearchAndUpload.Size = new System.Drawing.Size(263, 33);
+            this.btnSearchAndUpload.TabIndex = 5;
+            this.btnSearchAndUpload.Text = "Search and Upload Excel Draft BOM";
+            this.btnSearchAndUpload.UseVisualStyleBackColor = true;
+            this.btnSearchAndUpload.Click += new System.EventHandler(this.btnSearchAndUpload_Click);
             // 
             // label1
             // 
@@ -171,38 +170,38 @@
             // 
             // gBoxShow
             // 
-            this.gBoxShow.Controls.Add(this.btnSearchRpt);
+            this.gBoxShow.Controls.Add(this.FindAndUploadExcelReport);
             this.gBoxShow.Controls.Add(this.txtPathRpt);
             this.gBoxShow.ForeColor = System.Drawing.Color.Navy;
-            this.gBoxShow.Location = new System.Drawing.Point(296, 20);
+            this.gBoxShow.Location = new System.Drawing.Point(190, 20);
             this.gBoxShow.Name = "gBoxShow";
-            this.gBoxShow.Size = new System.Drawing.Size(620, 60);
+            this.gBoxShow.Size = new System.Drawing.Size(808, 60);
             this.gBoxShow.TabIndex = 35;
             this.gBoxShow.TabStop = false;
-            this.gBoxShow.Text = "Tidy up daily BOM report";
+            this.gBoxShow.Text = "Transform SAP COOISPI report to draft BOM";
             this.gBoxShow.Visible = false;
             // 
-            // btnSearchRpt
+            // FindAndUploadExcelReport
             // 
-            this.btnSearchRpt.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnSearchRpt.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnSearchRpt.Image = ((System.Drawing.Image)(resources.GetObject("btnSearchRpt.Image")));
-            this.btnSearchRpt.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnSearchRpt.Location = new System.Drawing.Point(7, 21);
-            this.btnSearchRpt.Name = "btnSearchRpt";
-            this.btnSearchRpt.Size = new System.Drawing.Size(181, 30);
-            this.btnSearchRpt.TabIndex = 35;
-            this.btnSearchRpt.Text = "Find and Upload  ";
-            this.btnSearchRpt.UseVisualStyleBackColor = true;
-            this.btnSearchRpt.Click += new System.EventHandler(this.btnSearchRpt_Click);
+            this.FindAndUploadExcelReport.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.FindAndUploadExcelReport.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.FindAndUploadExcelReport.Image = ((System.Drawing.Image)(resources.GetObject("FindAndUploadExcelReport.Image")));
+            this.FindAndUploadExcelReport.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.FindAndUploadExcelReport.Location = new System.Drawing.Point(7, 21);
+            this.FindAndUploadExcelReport.Name = "FindAndUploadExcelReport";
+            this.FindAndUploadExcelReport.Size = new System.Drawing.Size(253, 30);
+            this.FindAndUploadExcelReport.TabIndex = 35;
+            this.FindAndUploadExcelReport.Text = "Find and Upload SAP Excel Report ";
+            this.FindAndUploadExcelReport.UseVisualStyleBackColor = true;
+            this.FindAndUploadExcelReport.Click += new System.EventHandler(this.FindAndUploadExcelReport_Click);
             // 
             // txtPathRpt
             // 
             this.txtPathRpt.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
             this.txtPathRpt.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.txtPathRpt.Location = new System.Drawing.Point(200, 27);
+            this.txtPathRpt.Location = new System.Drawing.Point(266, 27);
             this.txtPathRpt.Name = "txtPathRpt";
-            this.txtPathRpt.Size = new System.Drawing.Size(407, 22);
+            this.txtPathRpt.Size = new System.Drawing.Size(531, 22);
             this.txtPathRpt.TabIndex = 36;
             // 
             // btnShow
@@ -377,7 +376,6 @@
             this.panel4.Controls.Add(this.label6);
             this.panel4.Controls.Add(this.label5);
             this.panel4.Controls.Add(this.label4);
-            this.panel4.Controls.Add(this.btnUploadBom);
             this.panel4.Controls.Add(this.txtPathBom);
             this.panel4.Controls.Add(this.btnSearchBom);
             this.panel4.Location = new System.Drawing.Point(905, 2);
@@ -414,23 +412,9 @@
             this.label4.ForeColor = System.Drawing.Color.Blue;
             this.label4.Location = new System.Drawing.Point(8, 10);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(83, 17);
+            this.label4.Size = new System.Drawing.Size(81, 17);
             this.label4.TabIndex = 14;
-            this.label4.Text = "Frozen BOM";
-            // 
-            // btnUploadBom
-            // 
-            this.btnUploadBom.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnUploadBom.ForeColor = System.Drawing.Color.Blue;
-            this.btnUploadBom.Image = ((System.Drawing.Image)(resources.GetObject("btnUploadBom.Image")));
-            this.btnUploadBom.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnUploadBom.Location = new System.Drawing.Point(212, 33);
-            this.btnUploadBom.Name = "btnUploadBom";
-            this.btnUploadBom.Size = new System.Drawing.Size(100, 33);
-            this.btnUploadBom.TabIndex = 19;
-            this.btnUploadBom.Text = "UploadBom   ";
-            this.btnUploadBom.UseVisualStyleBackColor = true;
-            this.btnUploadBom.Click += new System.EventHandler(this.btnUploadBom_Click);
+            this.label4.Text = "Freeze BOM";
             // 
             // txtPathBom
             // 
@@ -448,9 +432,9 @@
             this.btnSearchBom.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnSearchBom.Location = new System.Drawing.Point(102, 33);
             this.btnSearchBom.Name = "btnSearchBom";
-            this.btnSearchBom.Size = new System.Drawing.Size(100, 33);
+            this.btnSearchBom.Size = new System.Drawing.Size(177, 33);
             this.btnSearchBom.TabIndex = 18;
-            this.btnSearchBom.Text = "SearchBom  ";
+            this.btnSearchBom.Text = "Search And Freeze Bom  ";
             this.btnSearchBom.UseVisualStyleBackColor = true;
             this.btnSearchBom.Click += new System.EventHandler(this.btnSearchBom_Click);
             // 
@@ -458,7 +442,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1123, 665);
+            this.ClientSize = new System.Drawing.Size(1238, 665);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.fakeLabel1);
@@ -489,7 +473,7 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.LinkLabel llblMessage;
         private System.Windows.Forms.TextBox txtPath;
-        private System.Windows.Forms.Button btnSearch;
+        private System.Windows.Forms.Button btnSearchAndUpload;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox groupBox;
         private UserControls.FakeLabel fakeLabel1;
@@ -508,7 +492,6 @@
         private System.Windows.Forms.ToolStripMenuItem tsmiRecordFilter;
         private System.Windows.Forms.ToolStripMenuItem tsmiBlankFieldFilter;
         private System.Windows.Forms.Button btnPreview;
-        private System.Windows.Forms.Button btnUploadBom;
         private System.Windows.Forms.TextBox txtPathBom;
         private System.Windows.Forms.Button btnSearchBom;
         private System.Windows.Forms.Label label4;
@@ -516,7 +499,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button btnShow;
         private System.Windows.Forms.GroupBox gBoxShow;
-        private System.Windows.Forms.Button btnSearchRpt;
+        private System.Windows.Forms.Button FindAndUploadExcelReport;
         private System.Windows.Forms.TextBox txtPathRpt;
     }
 }

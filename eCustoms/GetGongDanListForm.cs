@@ -59,24 +59,29 @@ namespace eCustoms
 
         private void ckSD_CheckedChanged(object sender, EventArgs e)
         {
-            if (this.ckSD.Checked) { this.ckLE.Enabled = false; }
-            else { this.ckLE.Enabled = true; }
-            this.ckLE.Checked = false;
+            ckLE.Checked = !ckSD.Checked;
         }
 
         private void ckLE_CheckedChanged(object sender, EventArgs e)
         {
-            if (this.ckLE.Checked) { this.ckSD.Enabled = false; }
-            else { this.ckSD.Enabled = true; }
-            this.ckSD.Checked = false;
+            ckSD.Checked = !ckLE.Checked;
         }
 
-        private void btnSearchFile_Click(object sender, EventArgs e)
+        private void btnSearchAndUploadFile_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDlg = new OpenFileDialog();
-            openDlg.Filter = "Excel Database File(*.xls;*.xlsx)|*.xls;*.xlsx";
-            openDlg.ShowDialog();
-            this.txtPath.Text = openDlg.FileName;
+            if (this.ckSD.Checked == false && this.ckLE.Checked == false)
+            { MessageBox.Show("Please select checkbox object first.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+
+            String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPath);
+            if (!String.IsNullOrEmpty(pathAndFileName))
+            {
+                try
+                {
+                    bool bJudge = this.txtPath.Text.ToLower().Contains(".xlsx");
+                    this.ImportExcelData(this.txtPath.Text.Trim(), bJudge);
+                }
+                catch (Exception) { MessageBox.Show("Upload error, please try again.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); throw; }
+            };
         }
 
         private void btnUploadFile_Click(object sender, EventArgs e)
@@ -325,16 +330,8 @@ namespace eCustoms
             dtGongDanList.AcceptChanges();
             dtListGD.Dispose();
 
-            DataRow[] drBLP = dtGongDanList.Select("[Shipto Party]='000077441'");
-            if (drBLP.Length > 0) { foreach (DataRow dr in drBLP) { dr["IE Type"] = "BLP"; } }           
-            DataRow[] drExport = dtGongDanList.Select("[Delivery SLOC]='PC23' AND [Order Currency]<>'CNY' AND [Destination]<>'CN'");
-            if (drExport.Length > 0) { foreach (DataRow dr in drExport) { dr["IE Type"] = "EXPORT"; } }
-            DataRow[] drRMD = dtGongDanList.Select("[Delivery SLOC]='PC23' AND [Order Currency]='CNY' AND [Destination]='CN'");
-            if (drRMD.Length > 0) { foreach (DataRow dr in drRMD) { dr["IE Type"] = "RM-D"; } }
-            DataRow[] dr1418 = dtGongDanList.Select("[Delivery SLOC]='PC80' AND [Order Currency]<>'CNY' AND [Destination]='CN'");
-            if (dr1418.Length > 0) { foreach (DataRow dr in dr1418) { dr["IE Type"] = "1418"; } }
-            //DataRow[] drRMB = dtGongDan.Select("[Delivery SLOC]='PC80' AND [Order Currency]='CNY' AND [Destination]='CN'");
-            //if (drRMB.Length > 0) { foreach (DataRow dr in drRMB) { dr["IE Type"] = "RMB-1418"; } }
+            dtGongDanList = determineIE_Type(dtGongDanList);
+
             dtGongDanList.Columns.Remove("Delivery SLOC");
             dtGongDanList.Columns.Remove("Shipto Party");
             dtGongDanList.AcceptChanges();
@@ -352,6 +349,52 @@ namespace eCustoms
             this.dgvGongDanList.Columns["JudgePrice"].Visible = false;
             this.dgvGongDanList.Columns["GongDan No"].Frozen = true;
             this.dgvGongDanList.Columns["Avail Qty"].ReadOnly = true;
+        }
+
+        private DataTable determineIE_Type(DataTable dtGongDanList)
+        {
+            DataRow[] drBLP = dtGongDanList.Select("[Shipto Party]='000077441'");
+            foreach (DataRow dr in drBLP) { dr["IE Type"] = "BLP"; }
+
+            DataRow[] drEXPORT = dtGongDanList.Select("[Delivery SLOC]='PC23' AND [Order Currency]<>'CNY' AND [Destination]<>'CN'");
+            foreach (DataRow dr in drEXPORT) { dr["IE Type"] = "EXPORT"; }
+
+            DataRow[] dr1418 = dtGongDanList.Select("[Delivery SLOC]='PC80' AND [Order Currency]<>'CNY' AND [Destination]='CN'");
+            foreach (DataRow dr in dr1418) { dr["IE Type"] = "1418"; }
+
+            DataRow[] drRM_D = dtGongDanList.Select("[Delivery SLOC]='PC23' AND [Order Currency]='CNY' AND [Destination]='CN'");
+            foreach (DataRow dr in drRM_D) { dr["IE Type"] = "RM-D"; }
+
+
+            DataRow[] drRMB_D = dtGongDanList.Select("[Delivery SLOC]='PC23' AND [Order Currency]='CNY' AND [Destination]='CN'");
+            StringBuilder sqlInListOfBatchNoInRMB_D = new StringBuilder("'',");
+            foreach (DataRow dr in drRMB_D)
+            {
+                sqlInListOfBatchNoInRMB_D.Append("'" + dr["Batch No"].ToString() + "',");
+            };
+            sqlInListOfBatchNoInRMB_D.Length--;
+            SqlCommand gdWithRMBcomponent = new SqlCommand();
+            SqlConnection gdlConn = new SqlConnection(SqlLib.StrSqlConnection);
+            if (gdlConn.State == ConnectionState.Closed) { gdlConn.Open(); }
+            gdWithRMBcomponent.Connection = gdlConn;
+            gdWithRMBcomponent.CommandText = "SELECT [Batch No] FROM [C_BOMDetail] WHERE [RM Category] = 'RMB' And [Batch No] IN (" + sqlInListOfBatchNoInRMB_D.ToString() + ")";
+            DataTable ListOfGD_withRMB_component = new DataTable();
+            SqlDataAdapter gdlAdapter = new SqlDataAdapter();
+            gdlAdapter.SelectCommand = gdWithRMBcomponent;
+            gdlAdapter.Fill(ListOfGD_withRMB_component);
+            foreach (DataRow dr in drRMB_D)
+            {
+                DataRow[] foundRMBcomponentForThisBatchNO = ListOfGD_withRMB_component.Select("[Batch No] ='" + dr["Batch No"].ToString() + "'");
+                if (foundRMBcomponentForThisBatchNO.Length == 0) { dr["IE Type"] = "RMB-D"; };
+            }
+            dtGongDanList.AcceptChanges();
+
+            ListOfGD_withRMB_component.Dispose();
+            gdWithRMBcomponent.Dispose();
+            gdlAdapter.Dispose();
+            gdlConn.Dispose();
+
+            return dtGongDanList;
         }
 
         private void dgvGongDanList_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)

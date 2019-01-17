@@ -18,15 +18,15 @@ namespace eCustoms
     {
         private LoginForm loginFrm = new LoginForm();
         private DataTable dtExRate = new DataTable();
-        protected DataView dvFillDGV = new DataView();
-        protected DataTable dtFillDGV = new DataTable();
+        protected DataView dataViewToFillDataGridView = new DataView();
+        protected DataTable dataTableToFillDataGridView = new DataTable();
         protected PopUpFilterForm filterFrm = null;
         string strFilter = null;
         Regex regexLike_00_00_00Pattern = new Regex(@"(-\d\d){3}$"); // Strings look like '%-00-00-00' or '%-12-34-56',  Select method for DataTable does not work well with operator 'LIKE'
         private class returnMessageInTableAndString
         {
-            public DataTable messageInTableFormat;
-            public String messageInStringFormat;
+            public DataTable messageInDataTable;
+            public String messageString;
         }
 
         DataTable dtRM_ITEM_ListInBOMDetail = new DataTable();//Component item can be found in BOM detail table (only input items for every BOM)
@@ -62,7 +62,7 @@ namespace eCustoms
         }
 
         private void GetBomDataForm_FormClosing(object sender, FormClosingEventArgs e)
-        { dtExRate.Dispose(); dtFillDGV.Dispose(); dtRM_ITEM_ListInBOMDetail.Dispose(); FG_and_BatchNoListFromTableOverviewBOM.Dispose(); }
+        { dtExRate.Dispose(); dataTableToFillDataGridView.Dispose(); dtRM_ITEM_ListInBOMDetail.Dispose(); FG_and_BatchNoListFromTableOverviewBOM.Dispose(); }
 
         private void dgvBOM_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -134,9 +134,9 @@ namespace eCustoms
                     string strFGNo = this.dgvBOM["FG No", iRow].Value.ToString().Trim();
 
                     //Remove the selected BOM data in DataGridView
-                    DataRow[] dRow = dvFillDGV.Table.Select("[Batch No] = '" + strBatchNo + "' AND [FG No] = '" + strFGNo + "'");
+                    DataRow[] dRow = dataViewToFillDataGridView.Table.Select("[Batch No] = '" + strBatchNo + "' AND [FG No] = '" + strFGNo + "'");
                     foreach (DataRow dr in dRow) { dr.Delete(); }
-                    dtFillDGV.AcceptChanges();
+                    dataTableToFillDataGridView.AcceptChanges();
 
                     //Delete the selected BOM data in DataBase
                     delComm.Parameters.Add("@BatchNo", SqlDbType.NVarChar).Value = strBatchNo;
@@ -154,25 +154,16 @@ namespace eCustoms
             }
         }
 
-        private void btnSearch_Click(object sender, EventArgs e)
+        private void btnSearchAndUpload_Click(object sender, EventArgs e)
         {
-            String pathAndFileName = getExcelFileToBeUploaded(this.txtPath);
+            String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPath);
             if (!String.IsNullOrEmpty(pathAndFileName))
             {
                 this.ImportExcelData(pathAndFileName);
-                ComsumptionRateEuqalTo100Percent();// Attach this function here to make sure operator will not miss this step  on June.22.2017
+                ComsumptionRateEuqalTo100Percent();
             };
         }
 
-        private String getExcelFileToBeUploaded(TextBox txtPath)
-        {
-            OpenFileDialog openDlg = new OpenFileDialog();
-            openDlg.Filter = "Excel Files(*.xls;*.xlsx)|*.xls;*.xlsx";
-            openDlg.ShowDialog();
-            txtPath.Text = openDlg.FileName;
-            txtPath.Refresh();
-            return txtPath.Text.Trim();
-        }
 
         private void llblMessage_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) //show the field name list in spreadsheet file to be used for upload
         {
@@ -253,25 +244,15 @@ namespace eCustoms
                 return;
             }
 
-            
-            ComponentsAndOutputPerProcessOrder.Columns.Add("Batch Path", typeof(string));
             DataRow[] recycleOrScrapItems = ComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%BP2%'"); //remove it from the component list if it is scrap items such as drools, rejected material
-            if (recycleOrScrapItems.Length > 0)
-            { 
-                foreach (DataRow dr in recycleOrScrapItems) { ComponentsAndOutputPerProcessOrder.Rows.Remove(dr); };
-                ComponentsAndOutputPerProcessOrder.AcceptChanges();
-            }
+            foreach (DataRow dr in recycleOrScrapItems) { ComponentsAndOutputPerProcessOrder.Rows.Remove(dr); };
+            ComponentsAndOutputPerProcessOrder.Columns.Add("Batch Path", typeof(string));
+            ComponentsAndOutputPerProcessOrder.AcceptChanges();
             
-            DataTable ComponentsAndOutputPerProcessOrder1 = ComponentsAndOutputPerProcessOrder.Copy();
-            DataRow[] ComponentsNeedFurtherBreakdown1 = ComponentsAndOutputPerProcessOrder1.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
+            DataTable tempComponentsAndOutputPerProcessOrder = ComponentsAndOutputPerProcessOrder.Copy();
+            DataRow[] ComponentsNeedFurtherBreakdown1 = tempComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
             if (ComponentsNeedFurtherBreakdown1.Length > 0) //if we have recyles or intermediates as input items in the BOM, or any over-production FG is changed to C-CODE
             {
-                string ListOfBatchNoToRetrieveHistoricalBOM = String.Empty;
-                foreach (DataRow dr in ComponentsNeedFurtherBreakdown1) 
-                {
-                    ListOfBatchNoToRetrieveHistoricalBOM += "'" + dr["Lot No"].ToString().Trim().ToUpper() + "',";
-                }
-
                 DataRow[] ComponentsNeedFurtherBreakdown = ComponentsAndOutputPerProcessOrder.Select("[Item Description] LIKE '%-ExplosionToNextLevelBOM'");
                 foreach (DataRow drow in ComponentsNeedFurtherBreakdown)
                 {//ComponentsAndOutputPerProcessOrder excludes all the rows with intermediate FG item with batch No found in BOM history (added a sufix like  '-ExplosionToNextLevelBOM')
@@ -279,26 +260,33 @@ namespace eCustoms
                 }; 
                 ComponentsAndOutputPerProcessOrder.AcceptChanges();
 
-                ListOfBatchNoToRetrieveHistoricalBOM = ListOfBatchNoToRetrieveHistoricalBOM.Remove(ListOfBatchNoToRetrieveHistoricalBOM.Length - 1);
-                string strSQL = "SELECT '' AS [Process Order No], '' AS [Actual Start Date], '' AS [Actual End Date], C_BOMDetail.[Batch No], '' AS [FG No], '' AS [FG Description], " +
-                                "[Item No], [Item Description], [Lot No], [Inventory Type], [RM Category], [FG Qty], 0.0 AS [RM Qty],  [Total Input Qty], " +
-                                " 0.0 AS [Drools Qty], '' AS [Batch Path], [Consumption] FROM C_BOMDetail LEFT JOIN C_BOM ON C_BOMDetail.[Batch No] = C_BOM.[Batch No] WHERE C_BOMDetail.[Batch No] IN (" + ListOfBatchNoToRetrieveHistoricalBOM + ") AND [Consumption] > 0";
-                SqlDataAdapter BomAdp = new SqlDataAdapter(strSQL, sqlDB_Conn);
-                DataTable NextLevelDetailedBOM = new DataTable();
-                NextLevelDetailedBOM = ComponentsAndOutputPerProcessOrder.Clone();//Program will get data type as decimal instead of Int32 for Column [FG Qty], so added this sentence to make sure the new table is compatible with ComponentsAndOutputPerProcessOrder on Jan.14.2017                          
-                BomAdp.Fill(NextLevelDetailedBOM);//Get reycle or intermediate BOM from history BOM details
-                BomAdp.Dispose();
-                DataTable NextLevelDetailedBOM_TemporaryTable = new DataTable();
-                NextLevelDetailedBOM_TemporaryTable = NextLevelDetailedBOM.Copy();
+                Dictionary<string, DataTable> BatchNumbersAndNextLevelBreakDownBOMs = new Dictionary<string, DataTable>();
+                foreach (DataRow dr in ComponentsNeedFurtherBreakdown1)
+                {
+                    String batchNo = dr["Lot No"].ToString().Trim().ToUpper();
+                    if (!BatchNumbersAndNextLevelBreakDownBOMs.ContainsKey(batchNo))
+                    {
+                        string getDetailedBOM = "SELECT '' AS [Process Order No], '' AS [Actual Start Date], '' AS [Actual End Date], C_BOMDetail.[Batch No], '' AS [FG No], '' AS [FG Description], " +
+                                        "[Item No], [Item Description], [Lot No], [Inventory Type], [RM Category], [FG Qty], 0.0 AS [RM Qty],  [Total Input Qty], " +
+                                        " 0.0 AS [Drools Qty], '' AS [Batch Path], [Consumption] FROM C_BOMDetail LEFT JOIN C_BOM ON C_BOMDetail.[Batch No] = C_BOM.[Batch No] WHERE C_BOMDetail.[Batch No] = '" + batchNo + "' AND [Consumption] > 0";
+                        SqlDataAdapter BomAdp1 = new SqlDataAdapter(getDetailedBOM, sqlDB_Conn);
+                        DataTable NextLevelBreakDownBOM = new DataTable();
+                        BomAdp1.Fill(NextLevelBreakDownBOM);//Get reycle or intermediate BOM from history BOM details
+                        BomAdp1.Dispose();
+                        BatchNumbersAndNextLevelBreakDownBOMs.Add(batchNo, NextLevelBreakDownBOM);
+                    }
+                }
+
 
                 for (int m = 0; m < ComponentsNeedFurtherBreakdown1.Length; m++)
                 {
 
                     string FirstLevelCompoentLotNo = ComponentsNeedFurtherBreakdown1[m]["Lot No"].ToString().Trim().ToUpper();
-                    DataRow[] BOM_DetailsPerBatchNo = NextLevelDetailedBOM_TemporaryTable.Select("[Batch No]='" + FirstLevelCompoentLotNo + "'");
-                    if (BOM_DetailsPerBatchNo.Length > 0)  // find out the history BOM to calculate recycle
+                    DataTable BOM_DetailsPerBatchNo = BatchNumbersAndNextLevelBreakDownBOMs[FirstLevelCompoentLotNo].Copy();
+                    
+                    if (BOM_DetailsPerBatchNo.Rows.Count > 0)  // find out the history BOM to calculate recycle
                     {
-                        foreach (DataRow dr in BOM_DetailsPerBatchNo)
+                        foreach (DataRow dr in BOM_DetailsPerBatchNo.Rows)
                         {
                             dr["Batch No"] = ComponentsNeedFurtherBreakdown1[m]["Batch No"].ToString().Trim();
                             dr["Process Order No"] = ComponentsNeedFurtherBreakdown1[m]["Process Order No"].ToString().Trim().ToUpper();
@@ -317,12 +305,11 @@ namespace eCustoms
                             dr["Batch Path"] = "/" + ComponentsNeedFurtherBreakdown1[m]["Batch No"].ToString().Trim() + "/" + FirstLevelCompoentLotNo;
                             decimal dConsumption = Math.Round(Convert.ToDecimal(double.Parse(dr["Consumption"].ToString().Trim())), 6);
                             decimal FristLevelComponentQty = Math.Round(Convert.ToDecimal(double.Parse(ComponentsNeedFurtherBreakdown1[m]["RM Qty"].ToString().Trim())), 6);
-                            dr["RM Qty"] = Math.Round(FristLevelComponentQty * dConsumption * Total_InputQtyInNextLevelDetailedBOM / FG_QtyInNextLevelDetailedBOM, 6); 
-                        }
-                        foreach (DataRow dr in BOM_DetailsPerBatchNo)
-                        {
+                            dr["RM Qty"] = Math.Round(FristLevelComponentQty * dConsumption * Total_InputQtyInNextLevelDetailedBOM / FG_QtyInNextLevelDetailedBOM, 6);
+
                             ComponentsAndOutputPerProcessOrder.ImportRow(dr);
                         }
+
                     }
                     else  // use the BOM in the same FG to directly split the recycle qty into every existing RM
                     {                        
@@ -339,21 +326,18 @@ namespace eCustoms
                             {
                                 decimal individualRM_Qty = Math.Round(Convert.ToDecimal(double.Parse(dr["RM Qty"].ToString().Trim())), 6);
                                 dr["RM Qty"] = Math.Round(Convert.ToDecimal(individualRM_Qty * (1 + FristLevelComponentQty / dTotalInputQty )), 6);
-                                dr["Batch Path"] = "/" + FirstLevelCompoentLotNo + "/#";
+                                dr["Batch Path"] = "/" + FirstLevelCompoentLotNo + "/FairShareAllocation";
                             }                     
                     }
-
-                    ComponentsAndOutputPerProcessOrder.AcceptChanges();
-                    NextLevelDetailedBOM_TemporaryTable = NextLevelDetailedBOM.Copy();
                 }
 
-                ComponentsAndOutputPerProcessOrder1.Dispose();
-                NextLevelDetailedBOM_TemporaryTable.Dispose();
-                NextLevelDetailedBOM.Dispose();
+                ComponentsAndOutputPerProcessOrder.AcceptChanges();
+                tempComponentsAndOutputPerProcessOrder.Dispose();
+                                
 
-                DataView dv = ComponentsAndOutputPerProcessOrder.DefaultView;
-                dv.Sort = "Batch No ASC";
-                ComponentsAndOutputPerProcessOrder = dv.ToTable();
+                DataView dvToSortDataTable = ComponentsAndOutputPerProcessOrder.DefaultView;
+                dvToSortDataTable.Sort = "Batch No ASC";
+                ComponentsAndOutputPerProcessOrder = dvToSortDataTable.ToTable();
 
                 SetOrdinalForEachRecordInDataTableGroupBySortedKeyField(ComponentsAndOutputPerProcessOrder, "Batch No", "Line No");
 
@@ -372,6 +356,25 @@ namespace eCustoms
             this.GetDgvData(true);
         }
 
+
+        private void SetOrdinalForEachRecordInDataTableGroupBySortedKeyField(DataTable SortedDataTable, string SortColumnName, string sequenceNumberColumnName)
+        {
+            string PrecedingBatchNo = String.Empty;
+            int iLineNo = 0;
+            for (int n = 0; n < SortedDataTable.Rows.Count; n++)
+            {
+                string CurrentBatchNo = SortedDataTable.Rows[n][SortColumnName].ToString().Trim();
+                if (String.Compare(CurrentBatchNo, PrecedingBatchNo) != 0)
+                {
+                    PrecedingBatchNo = CurrentBatchNo;
+                    iLineNo = 1;
+                }
+                else
+                { iLineNo += 1; }
+                SortedDataTable.Rows[n][sequenceNumberColumnName] = iLineNo;
+            }
+            SortedDataTable.AcceptChanges();
+        }
 
         private void InsertIntoSQL_DB_TableFromDataTable(DataTable ComponentsAndOutputPerProcessOrder)
         {
@@ -425,29 +428,10 @@ namespace eCustoms
             sqlDB_Conn.Dispose();
         }
 
-        private void SetOrdinalForEachRecordInDataTableGroupBySortedKeyField(DataTable SortedDataTable, string SortColumnName, string sequenceNumberColumnName)
-        {
-            string PrecedingBatchNo = String.Empty;
-            int iLineNo = 0;
-            for (int n = 0; n < SortedDataTable.Rows.Count; n++)
-            {
-                string CurrentBatchNo = SortedDataTable.Rows[n][SortColumnName].ToString().Trim();
-                if (String.Compare(CurrentBatchNo, PrecedingBatchNo) != 0)
-                {
-                    PrecedingBatchNo = CurrentBatchNo;
-                    iLineNo = 1;
-                }
-                else
-                { iLineNo += 1; }
-                SortedDataTable.Rows[n][sequenceNumberColumnName] = iLineNo;
-            }
-            SortedDataTable.AcceptChanges();
-        }
-
         private void GetDgvData(bool bJudge)
         {
             strFilter = "";
-            dvFillDGV.RowFilter = "";
+            dataViewToFillDataGridView.RowFilter = "";
             string strSQL = null;
             if (bJudge == true)
             {
@@ -465,19 +449,19 @@ namespace eCustoms
             SqlConnection Conn = new SqlConnection(SqlLib.StrSqlConnection);
             if (Conn.State == ConnectionState.Closed) { Conn.Open(); }
             SqlDataAdapter Adapter = new SqlDataAdapter(strSQL, Conn);
-            dtFillDGV.Clear();
-            Adapter.Fill(dtFillDGV);
+            dataTableToFillDataGridView.Clear();
+            Adapter.Fill(dataTableToFillDataGridView);
             Adapter.Dispose();
-            dvFillDGV = dtFillDGV.DefaultView;
-            if (dtFillDGV.Rows.Count == 0)
+            dataViewToFillDataGridView = dataTableToFillDataGridView.DefaultView;
+            if (dataTableToFillDataGridView.Rows.Count == 0)
             {
-                dtFillDGV.Clear();
-                dtFillDGV.Dispose();
+                dataTableToFillDataGridView.Clear();
+                dataTableToFillDataGridView.Dispose();
                 this.dgvBOM.DataSource = DBNull.Value;
             }
             else
             {
-                this.dgvBOM.DataSource = dvFillDGV;
+                this.dgvBOM.DataSource = dataViewToFillDataGridView;
                 this.dgvBOM.Columns[0].HeaderText = "Select";
                 this.dgvBOM.Columns["FG No"].Frozen = true;
             }
@@ -738,7 +722,7 @@ namespace eCustoms
         private void btnPreview_Click(object sender, EventArgs e)
         {
             strFilter = "";
-            dvFillDGV.RowFilter = "";
+            dataViewToFillDataGridView.RowFilter = "";
             SqlConnection BrowseConn = new SqlConnection(SqlLib.StrSqlConnection);
             if (BrowseConn.State == ConnectionState.Closed) { BrowseConn.Open(); }
 
@@ -747,19 +731,19 @@ namespace eCustoms
                                  "[RM Currency], [RM Price], [Consumption], [Qty Loss Rate], [HS Code], [CHN Name], [Drools EHB], [Process Order No], [Actual Start Date], " +
                                  "[Actual End Date], [Creater], [Created Date] FROM M_DailyBOM ORDER BY [Batch No], [FG No], [Line No]";
             SqlDataAdapter BrowseAdapter = new SqlDataAdapter(strBOMField, BrowseConn);
-            dtFillDGV.Clear();
-            BrowseAdapter.Fill(dtFillDGV);
-            dvFillDGV = dtFillDGV.DefaultView;
-            if (dtFillDGV.Rows.Count == 0)
+            dataTableToFillDataGridView.Clear();
+            BrowseAdapter.Fill(dataTableToFillDataGridView);
+            dataViewToFillDataGridView = dataTableToFillDataGridView.DefaultView;
+            if (dataTableToFillDataGridView.Rows.Count == 0)
             {
-                dtFillDGV.Clear();
-                dtFillDGV.Dispose();
+                dataTableToFillDataGridView.Clear();
+                dataTableToFillDataGridView.Dispose();
                 this.dgvBOM.DataSource = DBNull.Value;
                 MessageBox.Show("There is no data.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                this.dgvBOM.DataSource = dvFillDGV;
+                this.dgvBOM.DataSource = dataViewToFillDataGridView;
                 this.dgvBOM.Columns[0].HeaderText = "Select";
                 this.dgvBOM.Columns["FG No"].Frozen = true;
             }
@@ -803,7 +787,7 @@ namespace eCustoms
                         else { strFilter = "[" + strColumnName + "] = " + strColumnText; }
                     }
                 }
-                dvFillDGV.RowFilter = strFilter;
+                dataViewToFillDataGridView.RowFilter = strFilter;
             }
             catch (Exception ex)
             { MessageBox.Show(ex.Message); }
@@ -840,7 +824,7 @@ namespace eCustoms
                         else { strFilter = "[" + strColumnName + "] <> " + strColumnText; }
                     }
                 }
-                dvFillDGV.RowFilter = strFilter;
+                dataViewToFillDataGridView.RowFilter = strFilter;
             }
             catch (Exception ex)
             { MessageBox.Show(ex.Message); }
@@ -849,7 +833,7 @@ namespace eCustoms
         private void tsmiRefreshFilter_Click(object sender, EventArgs e)
         {
             strFilter = "";
-            dvFillDGV.RowFilter = "";
+            dataViewToFillDataGridView.RowFilter = "";
             if (this.dgvBOM.ColumnCount < 20) { this.GetDgvData(true); }
             else { this.GetDgvData(false); }
         }
@@ -862,7 +846,7 @@ namespace eCustoms
                 filterFrm = new PopUpFilterForm(this.funfilter);
                 filterFrm.lblFilterColumn.Text = strColumnName;
                 filterFrm.cmbFilterContent.DataSource = new DataTable();
-                filterFrm.cmbFilterContent.DataSource = dvFillDGV.ToTable(true, new string[] { strColumnName });
+                filterFrm.cmbFilterContent.DataSource = dataViewToFillDataGridView.ToTable(true, new string[] { strColumnName });
                 filterFrm.cmbFilterContent.DisplayMember = strColumnName;
                 filterFrm.ShowDialog();
                 fundeleFilter delefilter = new fundeleFilter(funfilter);
@@ -906,7 +890,7 @@ namespace eCustoms
                         else { strFilter = strFilter + " AND [" + strColumnName + "] " + strSymbol + " " + strCondition; }
                     }
                 }
-                dvFillDGV.RowFilter = strFilter;
+                dataViewToFillDataGridView.RowFilter = strFilter;
                 filterFrm.Close();
             }
             catch (Exception ex)
@@ -922,7 +906,7 @@ namespace eCustoms
                     if (!String.IsNullOrEmpty(strFilter.Trim()))
                     { strFilter += @" AND ([RM EHB] = '' OR [RM EHB] IS NULL OR [HS Code] = '' OR [HS Code] IS NULL OR [Drools EHB] = '' OR [Drools EHB] IS NULL)"; }
                     else { strFilter = @"([RM EHB] = '' OR [RM EHB] IS NULL OR [HS Code] = '' OR [HS Code] IS NULL OR [Drools EHB] = '' OR [Drools EHB] IS NULL)"; }
-                    dvFillDGV.RowFilter = strFilter;
+                    dataViewToFillDataGridView.RowFilter = strFilter;
                 }
                 catch (Exception ex)
                 { MessageBox.Show(ex.Message); }
@@ -931,24 +915,14 @@ namespace eCustoms
 
         private void btnSearchBom_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openBomDlg = new OpenFileDialog();
-            openBomDlg.Filter = "Excel Database File(*.xls;*.xlsx)|*.xls;*.xlsx";
-            openBomDlg.ShowDialog();
-            this.txtPathBom.Text = openBomDlg.FileName;
-        }
-
-        private void btnUploadBom_Click(object sender, EventArgs e)
-        {
-            String pathAndFileName = this.txtPathBom.Text.Trim();
-            if (String.IsNullOrEmpty(pathAndFileName))
-            { MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            try
+            String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPathBom);
+            if (!String.IsNullOrEmpty(pathAndFileName))
             {
                 this.ImportBom(pathAndFileName);
                 ComsumptionRateEuqalTo100Percent();// Attach this function here to make sure operator will not miss this step  on July.17.2017
             }
-            catch (Exception) { throw; }
         }
+
 
         public void ImportBom(string strFilePath)
         {
@@ -977,7 +951,7 @@ namespace eCustoms
             int iCount = Convert.ToInt32(BomFzComm.ExecuteScalar());
             if (iCount > 0)
             {
-                MessageBox.Show("System should submit daily BOM completely before regenerating Forzen BOM.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Make sure all temporary BOMs have been registered in historical BOM list before freeze any BOMs.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 BomFzComm.Dispose();
                 BomFzConn.Dispose();
                 dtBomFz.Dispose();
@@ -1038,9 +1012,9 @@ namespace eCustoms
             else { this.gBoxShow.Visible = false; this.txtPathRpt.Text = string.Empty; }
         }
 
-        private void btnSearchRpt_Click(object sender, EventArgs e)
+        private void FindAndUploadExcelReport_Click(object sender, EventArgs e)
         {
-            String pathAndFileName = getExcelFileToBeUploaded(this.txtPathRpt);
+            String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPathRpt);
             if (!String.IsNullOrEmpty(pathAndFileName))
             {
                 try
@@ -1205,36 +1179,62 @@ namespace eCustoms
             productionInputAndOutputDetailsPerProessOrder.Columns["Total Input Qty"].SetOrdinal(13);
             drow = productionInputAndOutputDetailsPerProessOrder.Select("([Batch No] IS NULL OR [Batch No] = '') OR ([Item No] IS NULL OR [Item No] = '')");
             foreach (DataRow dr in drow) { productionInputAndOutputDetailsPerProessOrder.Rows.Remove(dr); };
-            //if RM item No. can be found in BOM FG NO list (Table C_BOM), add a suffix to the field of item description for further special process
-            foreach(DataRow RM_ItemIsFG_Item in productionInputAndOutputDetailsPerProessOrder.Rows) 
-            {
-                if (FG_and_BatchNoListFromTableOverviewBOM.Select("[FG No] = '" + RM_ItemIsFG_Item["Item No"].ToString() + "'").Length > 0)
-                { RM_ItemIsFG_Item["Item Description"] = RM_ItemIsFG_Item["Item Description"].ToString().Trim() + "-ExplosionToNextLevelBOM"; };//Add this one to make it applicable to both intermediate FG and recycle FG as input;
-            };
-            productionInputAndOutputDetailsPerProessOrder.AcceptChanges();
 
-            //If item Batch No can be found in table C_BOM (FG BOM list) and relevant FG no. is different (FG item is changed to recycle item number), need special mark for further action like replacing FG No.
+            //if RM item No. (input component) can be found in BOM FG NO list (Table C_BOM), add a suffix to the field of item description for further special process
+            DataTable distinctRM_ItemList = productionInputAndOutputDetailsPerProessOrder.DefaultView.ToTable(true, "Item No");
+            StringBuilder sqlInListOfFG_UsedAsComponent = new StringBuilder("'',");
+            foreach (DataRow RM_Item in distinctRM_ItemList.Rows)
+            {
+                if (FG_and_BatchNoListFromTableOverviewBOM.Select("[FG No] = '" + RM_Item["Item No"].ToString() + "'").Length > 0)
+                {
+                    sqlInListOfFG_UsedAsComponent.Append("'" + RM_Item["Item No"].ToString() + "',");
+                }
+            }
+            sqlInListOfFG_UsedAsComponent.Length--;
+
+            foreach (DataRow RM_ItemIsFG_Item in productionInputAndOutputDetailsPerProessOrder.Select("[Item No] in (" + sqlInListOfFG_UsedAsComponent.ToString() + ")"))
+            {
+                RM_ItemIsFG_Item["Item Description"] = RM_ItemIsFG_Item["Item Description"].ToString().Trim() + "-ExplosionToNextLevelBOM"; //Add this one to make it applicable to both intermediate FG and recycle FG as input;
+            };
+            productionInputAndOutputDetailsPerProessOrder.AcceptChanges();           
+           
+
+            //If item Batch No can be found in table C_BOM (FG BOM list) and relevant FG no. is different (FG item is changed to recycle item number), need special mark for further action like replacing FG No.           
+            DataTable distinctListOfRM_LotNo_And_Item = productionInputAndOutputDetailsPerProessOrder.DefaultView.ToTable(true, "Lot No", "Item Description");
+            StringBuilder sqlInListOfFG_UsedAsComponentButChangedToRecycleMaterial = new StringBuilder("'',");
             foreach (DataRow RecycleItemHasBatchNoOfFG in productionInputAndOutputDetailsPerProessOrder.Rows)
+            {
+                if (regexLike_00_00_00Pattern.IsMatch(RecycleItemHasBatchNoOfFG["Item Description"].ToString().Trim()))
+                {
+                    sqlInListOfFG_UsedAsComponentButChangedToRecycleMaterial.Append("'" + RecycleItemHasBatchNoOfFG["Lot No"].ToString() + "',");
+                }
+            }
+            sqlInListOfFG_UsedAsComponentButChangedToRecycleMaterial.Length--;
+
+            String originalFG_ItemName = string.Empty;
+            foreach (DataRow RecycleItemHasBatchNoOfFG in productionInputAndOutputDetailsPerProessOrder.Select("[Lot No] in (" + sqlInListOfFG_UsedAsComponentButChangedToRecycleMaterial.ToString() + ")"))
             {
                 if (FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No] = '" + RecycleItemHasBatchNoOfFG["Lot No"].ToString() + "' And [FG No] <> '" + RecycleItemHasBatchNoOfFG["Item No"].ToString() + "'").Length > 0)
                 {
-                    if (regexLike_00_00_00Pattern.IsMatch(RecycleItemHasBatchNoOfFG["Item Description"].ToString().Trim()))//check if Item description fits the cretiria of Finished Goods description (C-code description)
-                    {
-                        String abcExample1 = FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No] = '" + RecycleItemHasBatchNoOfFG["Lot No"].ToString() +"'")[0]["FG No"].ToString();
-                        RecycleItemHasBatchNoOfFG["Item No"] = abcExample1;//Replace item no.
-                        RecycleItemHasBatchNoOfFG["Item Description"] = RecycleItemHasBatchNoOfFG["Item Description"].ToString().Trim() + "-C-CODE-ExplosionToNextLevelBOM"; 
-                    };
+                    originalFG_ItemName = FG_and_BatchNoListFromTableOverviewBOM.Select("[Batch No] = '" + RecycleItemHasBatchNoOfFG["Lot No"].ToString() + "'")[0]["FG No"].ToString();
+                    RecycleItemHasBatchNoOfFG["Item No"] = originalFG_ItemName;//Replace item no.
+                    RecycleItemHasBatchNoOfFG["Item Description"] = RecycleItemHasBatchNoOfFG["Item Description"].ToString().Trim() + "-C-CODE-ExplosionToNextLevelBOM";
                 };
             };
             productionInputAndOutputDetailsPerProessOrder.AcceptChanges();
+            
 
-            returnMessageInTableAndString returnExceptionMessageInTableAndString = getDataErrorListBasedOnBusinessRules(productionInputAndOutputDetailsPerProessOrder);
+
+            returnMessageInTableAndString returnExceptionMessageInTableAndString = new returnMessageInTableAndString();
+            returnExceptionMessageInTableAndString = getDataErrorListBasedOnBusinessRules(productionInputAndOutputDetailsPerProessOrder);
 
             Dictionary<string, DataTable> ExcelSheetNamesAndDataTables = new Dictionary<string, DataTable>();
             ExcelSheetNamesAndDataTables.Add("Sheet1", productionInputAndOutputDetailsPerProessOrder);
-            ExcelSheetNamesAndDataTables.Add("Warning message", returnExceptionMessageInTableAndString.messageInTableFormat);
+            DataTable warningMessageDataTable = new DataTable();
+            warningMessageDataTable = (DataTable)returnExceptionMessageInTableAndString.messageInDataTable.Copy();
+            ExcelSheetNamesAndDataTables.Add("Warning message", warningMessageDataTable);
             exportDataTablesToSpreadSheets(ExcelSheetNamesAndDataTables);
-            messageToBeReturned += returnExceptionMessageInTableAndString.messageInStringFormat;
+            messageToBeReturned += returnExceptionMessageInTableAndString.messageString;
             productionInputAndOutputDetailsPerProessOrder.Dispose(); 
 
             return messageToBeReturned;
@@ -1295,13 +1295,14 @@ namespace eCustoms
             };
 
             returnMessageInTableAndString messageTableAndString = new returnMessageInTableAndString();
-            messageTableAndString.messageInTableFormat = dtMessage;
-            messageTableAndString.messageInStringFormat = messageToBeReturned;
+            messageTableAndString.messageInDataTable = dtMessage;
+            messageTableAndString.messageString = messageToBeReturned;
             return messageTableAndString;
         }
 
         private void exportDataTablesToSpreadSheets(Dictionary<string, DataTable> SpreadSheetNamesAndDataTables)
         {
+
             Microsoft.Office.Interop.Excel.Application excel = new Microsoft.Office.Interop.Excel.Application();
             Microsoft.Office.Interop.Excel.Workbooks workbooks = excel.Workbooks;
             Microsoft.Office.Interop.Excel.Workbook workbook = workbooks.Add(true);
@@ -1321,15 +1322,24 @@ namespace eCustoms
                     worksheet = (Microsoft.Office.Interop.Excel.Worksheet)workbook.Worksheets[counterOfSpreadSheets];
                     worksheet.Name = kvp.Key;
 
-                    for (int hearderColumn = 0; hearderColumn < spreadsheetDataSource.Columns.Count; hearderColumn++)
+                    int NumberOfColumns = spreadsheetDataSource.Columns.Count;
+                    int NumberOfRows = spreadsheetDataSource.Rows.Count;
+                    String[,] dataArray = new String[NumberOfRows + 1, NumberOfColumns];
+
+
+                    for (int hearderColumn = 0; hearderColumn < NumberOfColumns; hearderColumn++)
                     {
-                        worksheet.Cells[1, hearderColumn + 1] = spreadsheetDataSource.Columns[hearderColumn].ColumnName.Trim();
+                        dataArray[0, hearderColumn] = spreadsheetDataSource.Columns[hearderColumn].ColumnName;
                     };
-                    for (int rowNumber = 0; rowNumber < spreadsheetDataSource.Rows.Count; rowNumber++)
+
+                    DataRow dtRow = null;
+                    for (int rowNumber = 0; rowNumber < NumberOfRows; rowNumber++)
                     {
-                        for (int columnNum = 0; columnNum < spreadsheetDataSource.Columns.Count; columnNum++)
-                        { worksheet.Cells[rowNumber + 2, columnNum + 1] = "'" + spreadsheetDataSource.Rows[rowNumber][columnNum].ToString().Trim(); };
+                        dtRow = spreadsheetDataSource.Rows[rowNumber];
+                        for (int columnNum = 0; columnNum < NumberOfColumns; columnNum++)
+                        { dataArray[rowNumber+1, columnNum] = "'" + dtRow.ItemArray[columnNum].ToString().Trim(); };
                     };
+                    worksheet.Range["A1"].Resize[NumberOfRows + 1, NumberOfColumns].Value = dataArray;
 
                     worksheet.Cells.EntireColumn.AutoFit();
                 };
@@ -1342,6 +1352,7 @@ namespace eCustoms
             System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
             excel = null;
         }
+
 
         private String getOleBbConnnectionStringPerSpeadsheetFileExtension(string pathAndFileName)
         {
