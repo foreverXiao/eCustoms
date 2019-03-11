@@ -467,7 +467,7 @@ namespace eCustoms
                     apprBomComm.Parameters.Add("@BatchNo", SqlDbType.NVarChar).Value = strBatchNo;
                     apprBomComm.CommandText = "SELECT DISTINCT [Process Order No], [Actual Start Date], [Actual End Date], [Batch No], [FG No], [FG Description], [FG Qty], " +
                                               "[Total Input Qty], [Drools Qty], [Order Price(USD)], [Total RM Cost(USD)], [Qty Loss Rate], [HS Code], [CHN Name], '" +
-                                              loginFrm.PublicUserName + "' AS [Creater], [Created Date], [BOM In Customs] FROM M_DailyBOM WHERE [Batch No] = @BatchNo";
+                                              funcLib.getCurrentUserName() + "' AS [Creater], [Created Date], [BOM In Customs] FROM M_DailyBOM WHERE [Batch No] = @BatchNo";
                     SqlDataAdapter apprBomAdapter = new SqlDataAdapter();
                     apprBomAdapter.SelectCommand = apprBomComm;
                     DataTable dtApprBomM = new DataTable();
@@ -536,7 +536,7 @@ namespace eCustoms
                     if (strBatchListWithoutUSDcomponent.IndexOf(strBatchNo) >= 0)  //update current BOM's gongdan used qty to keep the same with the frozen BOM
                     {
                         apprBomComm.CommandType = CommandType.Text;
-                        apprBomComm.CommandText = "UPDATE C_BOM SET [Freeze] = 1, [Remark] = 'Frozen by " + loginFrm.PublicUserName + " on " + System.DateTime.Now.ToString("M/d/yyyy HH:mm") + "' WHERE [Batch No] = '" + strBatchNo + "'";
+                        apprBomComm.CommandText = "UPDATE C_BOM SET [Freeze] = 1, [Remark] = 'Frozen by " + funcLib.getCurrentUserName() + " on " + System.DateTime.Now.ToString("M/d/yyyy HH:mm") + "' WHERE [Batch No] = '" + strBatchNo + "'";
                         apprBomComm.ExecuteNonQuery();
                     }
 

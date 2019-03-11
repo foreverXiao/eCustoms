@@ -125,7 +125,7 @@ namespace eCustoms
             DateTime datetime = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
 
             sqlComm.Parameters.AddWithValue("@IEType", strIEType);
-            sqlComm.Parameters.AddWithValue("@Creater", loginFrm.PublicUserName);
+            sqlComm.Parameters.AddWithValue("@Creater", funcLib.getCurrentUserName());
             sqlComm.Parameters.AddWithValue("@PingDanDate", datetime);
             sqlComm.CommandText = @"usp_GetPingDan";
             SqlDataAdapter sqlAdapter = new SqlDataAdapter();

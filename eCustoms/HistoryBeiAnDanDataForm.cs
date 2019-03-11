@@ -355,7 +355,7 @@ namespace eCustoms
             string strUserName = Convert.ToString(updateComm.ExecuteScalar());
             if (!String.IsNullOrEmpty(strUserName))
             {
-                if (String.Compare(strUserName.Trim().ToUpper(), loginFrm.PublicUserName.Trim().ToUpper()) != 0)
+                if (String.Compare(strUserName.Trim().ToUpper(), funcLib.getCurrentUserName().Trim().ToUpper()) != 0)
                 {
                     MessageBox.Show(strUserName + " is handling RM Balance/Drools Balance data. Please wait for him/her to finish the process.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     updateConn.Dispose();
@@ -366,7 +366,7 @@ namespace eCustoms
             }
             else
             {
-                updateComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = loginFrm.PublicUserName.ToUpper();
+                updateComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName().ToUpper();
                 updateComm.CommandText = @"INSERT INTO B_MultiUser([UserName]) VALUES(@UserName)";
                 updateComm.ExecuteNonQuery();
                 updateComm.Parameters.RemoveAt("@UserName");

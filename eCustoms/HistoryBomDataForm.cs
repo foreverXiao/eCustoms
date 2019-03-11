@@ -188,7 +188,7 @@ namespace eCustoms
 
                 string strBatch = this.dgvMasterBOM["Batch No", this.dgvMasterBOM.CurrentRow.Index].Value.ToString().Trim();
                 string strFG = this.dgvMasterBOM["FG No", this.dgvMasterBOM.CurrentRow.Index].Value.ToString().Trim();
-                string strRemark = "/freeze by " + loginFrm.PublicUserName + System.DateTime.Now.ToString("M/d/yyyy");
+                string strRemark = "/freeze by " + funcLib.getCurrentUserName() + System.DateTime.Now.ToString("M/d/yyyy");
                 freezeBomComm.Parameters.Clear();
                 freezeBomComm.Parameters.Add("@Freeze", SqlDbType.Bit).Value = true;
                 freezeBomComm.Parameters.Add("@Remark", SqlDbType.NVarChar).Value = strRemark;

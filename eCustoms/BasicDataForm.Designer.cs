@@ -59,6 +59,7 @@
             this.bindingNavigator1.AddNewItem = null;
             this.bindingNavigator1.CountItem = null;
             this.bindingNavigator1.DeleteItem = null;
+            this.bindingNavigator1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bindingNavigatorAddItem,
             this.bindingNavigatorEditItem,
@@ -74,8 +75,9 @@
             this.bindingNavigator1.MoveNextItem = null;
             this.bindingNavigator1.MovePreviousItem = null;
             this.bindingNavigator1.Name = "bindingNavigator1";
+            this.bindingNavigator1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.bindingNavigator1.PositionItem = null;
-            this.bindingNavigator1.Size = new System.Drawing.Size(1234, 25);
+            this.bindingNavigator1.Size = new System.Drawing.Size(1851, 33);
             this.bindingNavigator1.TabIndex = 0;
             this.bindingNavigator1.Text = "bindingNavigator1";
             // 
@@ -84,7 +86,7 @@
             this.bindingNavigatorAddItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorAddItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorAddItem.Image")));
             this.bindingNavigatorAddItem.Name = "bindingNavigatorAddItem";
-            this.bindingNavigatorAddItem.Size = new System.Drawing.Size(23, 22);
+            this.bindingNavigatorAddItem.Size = new System.Drawing.Size(28, 30);
             this.bindingNavigatorAddItem.Text = "AddItem";
             this.bindingNavigatorAddItem.Click += new System.EventHandler(this.bindingNavigatorAddItem_Click);
             // 
@@ -93,7 +95,7 @@
             this.bindingNavigatorEditItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorEditItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorEditItem.Image")));
             this.bindingNavigatorEditItem.Name = "bindingNavigatorEditItem";
-            this.bindingNavigatorEditItem.Size = new System.Drawing.Size(23, 22);
+            this.bindingNavigatorEditItem.Size = new System.Drawing.Size(28, 30);
             this.bindingNavigatorEditItem.Text = "EditItem";
             this.bindingNavigatorEditItem.Click += new System.EventHandler(this.bindingNavigatorEditItem_Click);
             // 
@@ -102,7 +104,7 @@
             this.bindingNavigatorUpdateItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorUpdateItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorUpdateItem.Image")));
             this.bindingNavigatorUpdateItem.Name = "bindingNavigatorUpdateItem";
-            this.bindingNavigatorUpdateItem.Size = new System.Drawing.Size(23, 22);
+            this.bindingNavigatorUpdateItem.Size = new System.Drawing.Size(28, 30);
             this.bindingNavigatorUpdateItem.Text = "UpdateItem";
             this.bindingNavigatorUpdateItem.Click += new System.EventHandler(this.bindingNavigatorUpdateItem_Click);
             // 
@@ -111,7 +113,7 @@
             this.bindingNavigatorCancelItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorCancelItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorCancelItem.Image")));
             this.bindingNavigatorCancelItem.Name = "bindingNavigatorCancelItem";
-            this.bindingNavigatorCancelItem.Size = new System.Drawing.Size(23, 22);
+            this.bindingNavigatorCancelItem.Size = new System.Drawing.Size(28, 30);
             this.bindingNavigatorCancelItem.Text = "CancelItem";
             this.bindingNavigatorCancelItem.Click += new System.EventHandler(this.bindingNavigatorCancelItem_Click);
             // 
@@ -120,7 +122,7 @@
             this.bindingNavigatorDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorDeleteItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorDeleteItem.Image")));
             this.bindingNavigatorDeleteItem.Name = "bindingNavigatorDeleteItem";
-            this.bindingNavigatorDeleteItem.Size = new System.Drawing.Size(23, 22);
+            this.bindingNavigatorDeleteItem.Size = new System.Drawing.Size(28, 30);
             this.bindingNavigatorDeleteItem.Text = "DeleteItem";
             this.bindingNavigatorDeleteItem.Click += new System.EventHandler(this.bindingNavigatorDeleteItem_Click);
             // 
@@ -129,7 +131,7 @@
             this.bindingNavigatorSearchItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorSearchItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorSearchItem.Image")));
             this.bindingNavigatorSearchItem.Name = "bindingNavigatorSearchItem";
-            this.bindingNavigatorSearchItem.Size = new System.Drawing.Size(23, 22);
+            this.bindingNavigatorSearchItem.Size = new System.Drawing.Size(28, 30);
             this.bindingNavigatorSearchItem.Text = "SearchItem";
             this.bindingNavigatorSearchItem.Click += new System.EventHandler(this.bindingNavigatorSearchItem_Click);
             // 
@@ -137,7 +139,7 @@
             // 
             this.bindingNavigatorcmbItem.ForeColor = System.Drawing.SystemColors.WindowText;
             this.bindingNavigatorcmbItem.Name = "bindingNavigatorcmbItem";
-            this.bindingNavigatorcmbItem.Size = new System.Drawing.Size(135, 25);
+            this.bindingNavigatorcmbItem.Size = new System.Drawing.Size(200, 33);
             this.bindingNavigatorcmbItem.SelectedIndexChanged += new System.EventHandler(this.bindingNavigatorcmbItem_SelectedIndexChanged);
             // 
             // tsBtnDownload
@@ -146,16 +148,18 @@
             this.tsBtnDownload.Image = ((System.Drawing.Image)(resources.GetObject("tsBtnDownload.Image")));
             this.tsBtnDownload.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsBtnDownload.Name = "tsBtnDownload";
-            this.tsBtnDownload.Size = new System.Drawing.Size(23, 22);
+            this.tsBtnDownload.Size = new System.Drawing.Size(28, 30);
             this.tsBtnDownload.Text = "DownloadItem";
             this.tsBtnDownload.Click += new System.EventHandler(this.tsBtnDownload_Click);
             // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.dgvHandleData);
-            this.groupBox1.Location = new System.Drawing.Point(0, 26);
+            this.groupBox1.Location = new System.Drawing.Point(0, 40);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1234, 638);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Size = new System.Drawing.Size(1851, 982);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             // 
@@ -177,61 +181,66 @@
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvHandleData.DefaultCellStyle = dataGridViewCellStyle1;
             this.dgvHandleData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvHandleData.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.dgvHandleData.GridColor = System.Drawing.Color.YellowGreen;
-            this.dgvHandleData.Location = new System.Drawing.Point(3, 16);
+            this.dgvHandleData.Location = new System.Drawing.Point(4, 24);
+            this.dgvHandleData.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dgvHandleData.Name = "dgvHandleData";
             this.dgvHandleData.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgvHandleData.RowTemplate.Height = 23;
             this.dgvHandleData.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvHandleData.Size = new System.Drawing.Size(1228, 619);
+            this.dgvHandleData.Size = new System.Drawing.Size(1843, 953);
             this.dgvHandleData.TabIndex = 0;
+            this.dgvHandleData.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvHandleData_CellEnter);
             // 
             // cmsFilter
             // 
+            this.cmsFilter.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.cmsFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsmiChooseFilter,
             this.tsmiExcludeFilter,
             this.tsmiRefreshFilter,
             this.tsmiRecordFilter});
             this.cmsFilter.Name = "cmsFilter";
-            this.cmsFilter.Size = new System.Drawing.Size(144, 92);
+            this.cmsFilter.Size = new System.Drawing.Size(188, 124);
             // 
             // tsmiChooseFilter
             // 
             this.tsmiChooseFilter.Name = "tsmiChooseFilter";
-            this.tsmiChooseFilter.Size = new System.Drawing.Size(143, 22);
+            this.tsmiChooseFilter.Size = new System.Drawing.Size(187, 30);
             this.tsmiChooseFilter.Text = "Choose Filter";
             this.tsmiChooseFilter.Click += new System.EventHandler(this.tsmiChooseFilter_Click);
             // 
             // tsmiExcludeFilter
             // 
             this.tsmiExcludeFilter.Name = "tsmiExcludeFilter";
-            this.tsmiExcludeFilter.Size = new System.Drawing.Size(143, 22);
+            this.tsmiExcludeFilter.Size = new System.Drawing.Size(187, 30);
             this.tsmiExcludeFilter.Text = "Exclude Filter";
             this.tsmiExcludeFilter.Click += new System.EventHandler(this.tsmiExcludeFilter_Click);
             // 
             // tsmiRefreshFilter
             // 
             this.tsmiRefreshFilter.Name = "tsmiRefreshFilter";
-            this.tsmiRefreshFilter.Size = new System.Drawing.Size(143, 22);
+            this.tsmiRefreshFilter.Size = new System.Drawing.Size(187, 30);
             this.tsmiRefreshFilter.Text = "Refresh Filter";
             this.tsmiRefreshFilter.Click += new System.EventHandler(this.tsmiRefreshFilter_Click);
             // 
             // tsmiRecordFilter
             // 
             this.tsmiRecordFilter.Name = "tsmiRecordFilter";
-            this.tsmiRecordFilter.Size = new System.Drawing.Size(143, 22);
+            this.tsmiRecordFilter.Size = new System.Drawing.Size(187, 30);
             this.tsmiRecordFilter.Text = "Record Filter";
             this.tsmiRecordFilter.Click += new System.EventHandler(this.tsmiRecordFilter_Click);
             // 
             // BasicDataForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1234, 665);
+            this.ClientSize = new System.Drawing.Size(1851, 1023);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.bindingNavigator1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "BasicDataForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Original Data";

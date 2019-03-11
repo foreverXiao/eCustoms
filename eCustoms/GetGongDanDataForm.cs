@@ -148,7 +148,7 @@ namespace eCustoms
                 gdComm.Parameters.Add("@ChnName", SqlDbType.NVarChar).Value = dr["CHN Name"].ToString().Trim();
                 gdComm.Parameters.Add("@DroolsEHB", SqlDbType.NVarChar).Value = dr["Drools EHB"].ToString().Trim();
                 gdComm.Parameters.Add("@Destination", SqlDbType.NVarChar).Value = dr["Destination"].ToString().Trim();                                                                                                                               
-                gdComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
+                gdComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName();
                 gdComm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(dr["Created Date"].ToString().Trim());
                                 
                 gdComm.CommandText = "INSERT INTO M_DailyGongDan([Actual Start Date], [Actual End Date], [Batch Path], [Batch No], [BOM In Customs], [GongDan No], " + 
@@ -427,7 +427,7 @@ namespace eCustoms
                 Comm.Parameters.Add("@ChnName", SqlDbType.NVarChar).Value = dr["CHN Name"].ToString().Trim().ToUpper();
                 Comm.Parameters.Add("@DroolsEHB", SqlDbType.NVarChar).Value = dr["Drools EHB"].ToString().Trim().ToUpper();
                 Comm.Parameters.Add("@Destination", SqlDbType.NVarChar).Value = dr["Destination"].ToString().Trim().ToUpper();
-                Comm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
+                Comm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName();
                 Comm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
 
                 Comm.CommandText = "INSERT INTO M_DailyGongDan([Actual Start Date], [Actual End Date], [Batch Path], [Batch No], [BOM In Customs], [GongDan No], " +

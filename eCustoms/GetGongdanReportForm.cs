@@ -137,7 +137,7 @@ namespace eCustoms
             string strUserName = Convert.ToString(apprGdComm.ExecuteScalar());
             if (!String.IsNullOrEmpty(strUserName))
             {
-                if (String.Compare(strUserName.Trim().ToUpper(), loginFrm.PublicUserName.Trim().ToUpper()) != 0)
+                if (String.Compare(strUserName.Trim().ToUpper(), funcLib.getCurrentUserName().Trim().ToUpper()) != 0)
                 {
                     MessageBox.Show(strUserName + " is handling RM Balance/Drools Balance data. Please wait for him/her to finish the process.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     apprGdComm.Dispose();
@@ -147,7 +147,7 @@ namespace eCustoms
             }
             else
             {
-                apprGdComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = loginFrm.PublicUserName.ToUpper();
+                apprGdComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName().ToUpper();
                 apprGdComm.CommandText = "INSERT INTO B_MultiUser([UserName]) VALUES(@UserName)";
                 apprGdComm.ExecuteNonQuery();
                 apprGdComm.Parameters.Clear();
@@ -160,7 +160,7 @@ namespace eCustoms
                 apprGdComm.Parameters.Add("@GongDanNo", SqlDbType.NVarChar).Value = strGongDan;
                 apprGdComm.CommandText = "SELECT DISTINCT [Actual Start Date], [Actual End Date], [Batch No], [BOM In Customs], [GongDan No], [FG No], [FG Description], " +
                                          "[IE Type], [Order No], [GongDan Qty], [Order Price], [Order Currency], CAST([Total RM Qty] AS decimal(18, 6)) AS [Total RM Qty], " + 
-                                         "[Total RM Cost(USD)], CAST([Drools Rate] AS decimal(18,6)) AS [DroolsRate], [CHN Name], [Destination], '" + loginFrm.PublicUserName +
+                                         "[Total RM Cost(USD)], CAST([Drools Rate] AS decimal(18,6)) AS [DroolsRate], [CHN Name], [Destination], '" + funcLib.getCurrentUserName() +
                                          "' AS [Creater], [Created Date], '" + dtApproved + "' AS [Approval Date] FROM M_DailyGongDan WHERE [GongDan No] = @GongDanNo";
                 SqlDataAdapter apprGdAdap = new SqlDataAdapter();
                 apprGdAdap.SelectCommand = apprGdComm;

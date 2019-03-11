@@ -215,7 +215,7 @@ namespace eCustoms
             bool bEmpty = false;
             for (int i = 0; i < this.dgvHandleData.ColumnCount; i++)
             {
-                if (!String.IsNullOrEmpty(this.dgvHandleData[i, this.dgvHandleData.CurrentRow.Index].Value.ToString().Trim())) bEmpty = true;
+                if (!String.IsNullOrEmpty(this.dgvHandleData[i, this.dgvHandleData.CurrentRow.Index].EditedFormattedValue.ToString().Trim())) bEmpty = true;
             }
             if (bEmpty == false)
             {
@@ -233,15 +233,15 @@ namespace eCustoms
 
             if (this.bindingNavigatorcmbItem.ComboBox.SelectedValue.ToString() == strList[1])
             {
-                SqlComm.Parameters.Add("@GoodsType", SqlDbType.NVarChar).Value = this.dgvHandleData["Goods Type", iCellIndex].Value.ToString().Trim().ToUpper();
-                string strRmPrice = this.dgvHandleData["RM Price", iCellIndex].Value.ToString().Trim();
+                SqlComm.Parameters.Add("@GoodsType", SqlDbType.NVarChar).Value = this.dgvHandleData["Goods Type", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                string strRmPrice = this.dgvHandleData["RM Price", iCellIndex].EditedFormattedValue.ToString().Trim();
                 if (String.IsNullOrEmpty(strRmPrice)) { SqlComm.Parameters.Add("@RmPrice", SqlDbType.Decimal).Value = 0.0M; }
                 else { SqlComm.Parameters.Add("@RmPrice", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(strRmPrice), 2); }
-                SqlComm.Parameters.Add("@Currency", SqlDbType.NVarChar).Value = this.dgvHandleData["Currency", iCellIndex].Value.ToString().Trim().ToUpper();
-                SqlComm.Parameters.Add("@RmChnName", SqlDbType.NVarChar).Value = this.dgvHandleData["RM CHN Name", iCellIndex].Value.ToString().Trim().ToUpper();
-                SqlComm.Parameters.Add("@ChnDescription", SqlDbType.NVarChar).Value = this.dgvHandleData["CHN Description", iCellIndex].Value.ToString().Trim().ToUpper();
-                SqlComm.Parameters.Add("@RMEHB", SqlDbType.NVarChar).Value = this.dgvHandleData["RM EHB", iCellIndex].Value.ToString().Trim().ToUpper();
-
+                SqlComm.Parameters.Add("@Currency", SqlDbType.NVarChar).Value = this.dgvHandleData["Currency", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@RmChnName", SqlDbType.NVarChar).Value = this.dgvHandleData["RM CHN Name", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@ChnDescription", SqlDbType.NVarChar).Value = this.dgvHandleData["CHN Description", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@RMEHB", SqlDbType.NVarChar).Value = this.dgvHandleData["RM EHB", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                
                 if (strSwitch == "Add")
                 { SqlComm.CommandText = "INSERT INTO B_ChnDescription([Goods Type], [RM Price], [Currency], [RM CHN Name], [CHN Description], [RM EHB]) " + 
                                         "VALUES(@GoodsType, @RmPrice, @Currency, @RmChnName, @ChnDescription, @RMEHB)"; }
@@ -253,10 +253,10 @@ namespace eCustoms
 
             else if (this.bindingNavigatorcmbItem.ComboBox.SelectedValue.ToString() == strList[2])
             {
-                SqlComm.Parameters.Add("@EN", SqlDbType.NVarChar).Value = this.dgvHandleData["EN", iCellIndex].Value.ToString().Trim().ToUpper();
-                SqlComm.Parameters.Add("@CN", SqlDbType.NVarChar).Value = this.dgvHandleData["CN", iCellIndex].Value.ToString().Trim().ToUpper();
-                SqlComm.Parameters.Add("@Code", SqlDbType.NVarChar).Value = this.dgvHandleData["Code", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@ShortName", SqlDbType.NVarChar).Value = this.dgvHandleData["ShortName", iCellIndex].Value.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@EN", SqlDbType.NVarChar).Value = this.dgvHandleData["EN", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@CN", SqlDbType.NVarChar).Value = this.dgvHandleData["CN", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@Code", SqlDbType.NVarChar).Value = this.dgvHandleData["Code", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@ShortName", SqlDbType.NVarChar).Value = this.dgvHandleData["ShortName", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
 
                 if (strSwitch == "Add") { SqlComm.CommandText = "INSERT INTO B_Country([EN], [CN], [Code], [ShortName]) VALUES( @EN, @CN, @Code, @ShortName)"; }
 
@@ -265,14 +265,14 @@ namespace eCustoms
 
             else if (this.bindingNavigatorcmbItem.ComboBox.SelectedValue.ToString() == strList[4])
             {
-                SqlComm.Parameters.Add("@HSCode", SqlDbType.NVarChar).Value = this.dgvHandleData["HS Code", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@DroolsChineseName", SqlDbType.NVarChar).Value = this.dgvHandleData["Drools CHN Name", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@DroolsEHB", SqlDbType.NVarChar).Value = this.dgvHandleData["Drools EHB", iCellIndex].Value.ToString().Trim();
-                string strAvgPrice = this.dgvHandleData["Average Price(RMB)", iCellIndex].Value.ToString().Trim();
+                SqlComm.Parameters.Add("@HSCode", SqlDbType.NVarChar).Value = this.dgvHandleData["HS Code", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@DroolsChineseName", SqlDbType.NVarChar).Value = this.dgvHandleData["Drools CHN Name", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@DroolsEHB", SqlDbType.NVarChar).Value = this.dgvHandleData["Drools EHB", iCellIndex].EditedFormattedValue.ToString().Trim();
+                string strAvgPrice = this.dgvHandleData["Average Price(RMB)", iCellIndex].EditedFormattedValue.ToString().Trim();
                 if (String.IsNullOrEmpty(strAvgPrice)) { SqlComm.Parameters.Add("@AveragePrice", SqlDbType.Decimal).Value = 0.0M; }
                 else { SqlComm.Parameters.Add("@AveragePrice", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(strAvgPrice), 2); }
-                SqlComm.Parameters.Add("@FGChineseName", SqlDbType.NVarChar).Value = this.dgvHandleData["FG CHN Name", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@RMCategory", SqlDbType.NVarChar).Value = this.dgvHandleData["RM Category", iCellIndex].Value.ToString().Trim().ToUpper();
+                SqlComm.Parameters.Add("@FGChineseName", SqlDbType.NVarChar).Value = this.dgvHandleData["FG CHN Name", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@RMCategory", SqlDbType.NVarChar).Value = this.dgvHandleData["RM Category", iCellIndex].EditedFormattedValue.ToString().Trim().ToUpper();
 
                 if (strSwitch == "Add")
                 { SqlComm.CommandText = "INSERT INTO B_Drools([HS Code], [Drools CHN Name], [Drools EHB], [Average Price(RMB)], [FG CHN Name], [RM Category]) " +
@@ -285,14 +285,14 @@ namespace eCustoms
 
             else if (this.bindingNavigatorcmbItem.ComboBox.SelectedValue.ToString() == strList[5])
             {
-                SqlComm.Parameters.Add("@HSCode", SqlDbType.NVarChar).Value = this.dgvHandleData["HS Code", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@ChineseName", SqlDbType.NVarChar).Value = this.dgvHandleData["FG CHN Name", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@BOMEHB", SqlDbType.NVarChar).Value = this.dgvHandleData["BOM EHB", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@DutyRate", SqlDbType.Decimal).Value = Convert.ToDecimal(this.dgvHandleData["Duty Rate", iCellIndex].Value.ToString().Trim());
-                string strIsAllocated = this.dgvHandleData["IsAllocated", iCellIndex].Value.ToString().Trim();
+                SqlComm.Parameters.Add("@HSCode", SqlDbType.NVarChar).Value = this.dgvHandleData["HS Code", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@ChineseName", SqlDbType.NVarChar).Value = this.dgvHandleData["FG CHN Name", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@BOMEHB", SqlDbType.NVarChar).Value = this.dgvHandleData["BOM EHB", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@DutyRate", SqlDbType.Decimal).Value = Convert.ToDecimal(this.dgvHandleData["Duty Rate", iCellIndex].EditedFormattedValue.ToString().Trim());
+                string strIsAllocated = this.dgvHandleData["IsAllocated", iCellIndex].EditedFormattedValue.ToString().Trim();
                 SqlComm.Parameters.Add("@IsAllocated", SqlDbType.Bit).Value = String.IsNullOrEmpty(strIsAllocated) ? false : true;
-                SqlComm.Parameters.Add("@Grade", SqlDbType.NVarChar).Value = this.dgvHandleData["Grade", iCellIndex].Value.ToString().Trim();
-                SqlComm.Parameters.Add("@PackageCode", SqlDbType.Int).Value = Convert.ToInt32(this.dgvHandleData["Package Code", iCellIndex].Value.ToString().Trim());
+                SqlComm.Parameters.Add("@Grade", SqlDbType.NVarChar).Value = this.dgvHandleData["Grade", iCellIndex].EditedFormattedValue.ToString().Trim();
+                SqlComm.Parameters.Add("@PackageCode", SqlDbType.Int).Value = Convert.ToInt32(this.dgvHandleData["Package Code", iCellIndex].EditedFormattedValue.ToString().Trim());
 
                 if (strSwitch == "Add")
                 { SqlComm.CommandText = "INSERT INTO B_HsCode([HS Code], [FG CHN Name], [BOM EHB], [Duty Rate], [IsAllocated], [Grade], [Package Code]) " +
@@ -584,6 +584,18 @@ namespace eCustoms
                 filterFrm.Close();
             }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
+        }
+
+
+
+        private void dgvHandleData_KeyDown(object sender, KeyEventArgs e)
+        {
+
+        }
+
+        private void dgvHandleData_CellEnter(object sender, DataGridViewCellEventArgs e)
+        {
+          
         }
     }
 }

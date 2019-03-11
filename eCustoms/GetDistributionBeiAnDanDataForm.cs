@@ -105,7 +105,7 @@ namespace eCustoms
             sqlAdp.Fill(dtExtractDoc);
             sqlComm.Parameters.Clear();
             sqlComm.CommandText = "usp_InsertBeiAnDanForRMD";
-            sqlComm.Parameters.AddWithValue("@Creater", loginFrm.PublicUserName.ToUpper());
+            sqlComm.Parameters.AddWithValue("@Creater", funcLib.getCurrentUserName().ToUpper());
             sqlComm.Parameters.AddWithValue("@BeiAnDanDate", System.DateTime.Now);
             sqlComm.Parameters.AddWithValue("@tvp_BAD", dtMid);
             sqlAdp.SelectCommand = sqlComm;

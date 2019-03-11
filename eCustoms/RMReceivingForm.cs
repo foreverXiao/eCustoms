@@ -29,8 +29,11 @@ namespace eCustoms
 
         private void RMReceivingForm_Load(object sender, EventArgs e)
         {
-            this.dtpFrom.CustomFormat = " ";
-            this.dtpTo.CustomFormat = " ";        
+            dtpFrom.Text= System.DateTime.Now.AddDays(-7).ToString("M/d/yyyy");
+            dtpTo.Text = System.DateTime.Now.AddDays(1).ToString("M/d/yyyy");
+            cmbSelectItem.SelectedIndex = 0;
+            cmbFieldName.SelectedIndex = 1;
+            cmbAdjustment.SelectedIndex = 0;
         }
 
         private void RMReceivingForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -50,62 +53,72 @@ namespace eCustoms
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            string strFieldName = this.cmbFieldName.Text.Trim();
-            string strTxtField = this.txtFieldName.Text.Trim();
-            if (String.IsNullOrEmpty(strFieldName) && !String.IsNullOrEmpty(strTxtField))
-            { MessageBox.Show("Please select field name first.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            if (!String.IsNullOrEmpty(strFieldName) && String.IsNullOrEmpty(strTxtField)) 
-            { MessageBox.Show("Please input the value of " + strFieldName + " field.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            Cursor.Current = Cursors.WaitCursor;
+            if (!cbColumnName.Checked && !cbCreationDates.Checked)
+            {
+                MessageBox.Show("Please make sure you apply the filer on dates and fields before preview the records in RM receiving table.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            this.dgvRMAdjustment.DataSource = DBNull.Value;
-            string strBrowse = @"SELECT * FROM C_RMReceiving WHERE";
-            if (!String.IsNullOrEmpty(strFieldName) && !String.IsNullOrEmpty(strTxtField))
-            { strBrowse = @"SELECT * FROM C_RMReceiving WHERE [" + strFieldName + "] = '" + strTxtField + "' AND"; }
-            if (!String.IsNullOrEmpty(this.dtpTo.Text.Trim()))
-            {
-                if (!String.IsNullOrEmpty(this.dtpFrom.Text.Trim()))
-                {
-                    if (DateTime.Compare(Convert.ToDateTime(this.dtpFrom.Value.ToString("M/d/yyyy")), Convert.ToDateTime(this.dtpTo.Value.ToString("M/d/yyyy"))) == 1) {
-                        MessageBox.Show("Start date should be not greater than end date.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-                    else { strBrowse += " [Created Date] >= '" + Convert.ToDateTime(this.dtpFrom.Value.ToString("M/d/yyyy")) + "' AND [Created Date] < '" + Convert.ToDateTime(this.dtpTo.Value.AddDays(1.0).ToString("M/d/yyyy")) + "' AND"; }
-                }
-                else { strBrowse += " [Created Date] < '" + Convert.ToDateTime(this.dtpTo.Value.AddDays(1.0).ToString("M/d/yyyy")) + "' AND"; }
-            }
-            else
-            {
-                if (!String.IsNullOrEmpty(this.dtpFrom.Text.Trim()))
-                { strBrowse += " [Created Date] >= '" + Convert.ToDateTime(this.dtpFrom.Value.ToString("M/d/yyyy")) + "' AND"; }
-            }
-            if (String.Compare(strBrowse.Substring(strBrowse.Trim().Length - 5, 5), "WHERE") == 0)
-            { MessageBox.Show("Please select the filter condition.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            strBrowse = strBrowse.Remove(strBrowse.Trim().Length - 3) + " ORDER BY [Created Date] DESC, [Item No], [Lot No]";
+            String selectRecordsFromTableRMreceiving = " SELECT * FROM C_RMReceiving " + getSQL_WhereConditionsStatement() + " ORDER BY [Created Date] DESC, [Item No], [Lot No]";
 
             SqlConnection browseConn = new SqlConnection(SqlLib.StrSqlConnection);
             if (browseConn.State == ConnectionState.Closed) { browseConn.Open(); }
-            SqlDataAdapter browseAdapterR = new SqlDataAdapter(strBrowse, browseConn);
+            SqlDataAdapter browseAdapterR = new SqlDataAdapter(selectRecordsFromTableRMreceiving, browseConn);
             DataTable dtFillRmRcvd = new DataTable();
             browseAdapterR.Fill(dtFillRmRcvd);
             browseAdapterR.Dispose();
 
+            this.dgvRMReceiving.DataSource = dtFillRmRcvd;
+
             if (dtFillRmRcvd.Rows.Count == 0)
             {
-                dtFillRmRcvd.Clear();                
-                this.dgvRMReceiving.DataSource = DBNull.Value;
                 MessageBox.Show("There is no data.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
-            {
-                this.dgvRMReceiving.DataSource = dtFillRmRcvd;
+            {               
                 this.dgvRMReceiving.Rows[0].HeaderCell.Value = 1;
                 for (int i = 2; i < this.dgvRMReceiving.ColumnCount; i++)
                 { this.dgvRMReceiving.Columns[i].ReadOnly = true; }
                 this.dgvRMReceiving.Columns[3].Frozen = true;
             }
-            if (browseConn.State == ConnectionState.Open)
+
+            browseConn.Dispose();
+
+            Cursor.Current = Cursors.Default;
+        }
+
+        private String getSQL_WhereConditionsStatement()
+        {
+            StringBuilder sqlWhereConditionsStatement = new StringBuilder("");
+            try {
+                sqlWhereConditionsStatement.Append(" WHERE ");
+                if (cbColumnName.Checked)
+                {
+                    sqlWhereConditionsStatement.Append("[" + cmbFieldName.Text.Trim() + "] = '" + txtFieldName.Text.Trim() + "' ");
+                }
+                else
+                {
+                    sqlWhereConditionsStatement.Append(" 1=1 ");
+                }
+
+                sqlWhereConditionsStatement.Append(" And ");
+
+                if (cbCreationDates.Checked)
+                {
+                    sqlWhereConditionsStatement.Append(" [Created Date] between '" + dtpFrom.Value.ToString("M/d/yyyy") + "' and '" + dtpTo.Value.ToString("M/d/yyyy") + "' ");
+                }
+                else
+                {
+                    sqlWhereConditionsStatement.Append(" 1=1 ");
+                }
+            }
+            catch
             {
-                browseConn.Close();
-                browseConn.Dispose();
-            }            
+                sqlWhereConditionsStatement.Clear();
+            }
+
+            return sqlWhereConditionsStatement.ToString();
         }
 
         private void dgvRMReceiving_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -432,51 +445,19 @@ namespace eCustoms
         private void btnDownload_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Are you sure to download all history data?", "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) { return; }
-            SqlConnection ConnDL = new SqlConnection(SqlLib.StrSqlConnection);
-            if (ConnDL.State == ConnectionState.Closed) { ConnDL.Open(); }
-            SqlDataAdapter AdapterDL = new SqlDataAdapter("SELECT * FROM C_RMReceiving", ConnDL);
-            DataTable dtDL = new DataTable();
-            AdapterDL.Fill(dtDL);
-            AdapterDL.Dispose();
-            if (dtDL.Rows.Count == 0)
-            {
-                MessageBox.Show("There is no data.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                ConnDL.Dispose();
-                dtDL.Dispose();
-                return;
-            }
 
-            int PageRow = 1048576;
-            int iPageCount = (int)(dtDL.Rows.Count / PageRow);
-            if (iPageCount * PageRow < dtDL.Rows.Count) { iPageCount += 1; }
-            try
-            {
-                for (int m = 1; m <= iPageCount; m++)
-                {
-                    string strPath = System.Windows.Forms.Application.StartupPath + "\\RM Receiving Data " + System.DateTime.Today.ToString("yyyyMMdd") + "_" + m.ToString() + ".xls";
-                    if (File.Exists(strPath)) { File.Delete(strPath); }
-                    Thread.Sleep(1000);
-                    StreamWriter sw = new StreamWriter(strPath, false, Encoding.Unicode);
-                    StringBuilder sb = new StringBuilder();
-                    for (int n = 0; n < dtDL.Columns.Count; n++)
-                    { sb.Append(dtDL.Columns[n].ColumnName.ToString().Trim() + "\t"); }
-                    sb.Append(Environment.NewLine);
+            cbColumnName.Checked = false;
+            cbCreationDates.Checked = true;
+            dtpFrom.Text = System.DateTime.Now.AddYears(-20).ToString("M/d/yyyy");
+            dtpTo.Text = System.DateTime.Now.AddYears(1).ToString("M/d/yyyy");
 
-                    for (int i = (m - 1) * PageRow; i < dtDL.Rows.Count && i < m * PageRow; i++)
-                    {
-                        System.Windows.Forms.Application.DoEvents();
-                        for (int j = 0; j < dtDL.Columns.Count; j++) { sb.Append("'" + dtDL.Rows[i][j].ToString().Trim() + "\t"); }
-                        sb.Append(Environment.NewLine);
-                    }
-                    sw.Write(sb.ToString());
-                    sw.Flush();
-                    sw.Close();
-                    sw.Dispose();
-                }
-                MessageBox.Show("Completely download all RM Receving data.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
-            finally { ConnDL.Dispose(); dtDL.Dispose(); }
+            bnDownloadToEXCEL_Click(sender, e);
+
+            cbColumnName.Checked = false;
+            cbCreationDates.Checked = false;
+            dtpFrom.Text = System.DateTime.Now.AddDays(-7).ToString("M/d/yyyy");
+            dtpTo.Text = System.DateTime.Now.AddDays(1).ToString("M/d/yyyy");
+
         }
 
         private void llinkPrompt_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -504,274 +485,231 @@ namespace eCustoms
             }
         } 
 
-        private void btnSearch_Click(object sender, EventArgs e)
+        private void btnSearchAndUpload_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDlg = new OpenFileDialog();
-            openDlg.Filter = "Excel Database File(*.xls;*.xlsx)|*.xls;*.xlsx";
-            openDlg.ShowDialog();
-            this.txtPath.Text = openDlg.FileName;
+            Cursor.Current = Cursors.WaitCursor;
+            String pathAndFileName = funcLib.getExcelFileToBeUploaded(txtPath);
+            if (!String.IsNullOrEmpty(pathAndFileName))
+            {
+                AddNewRecordsOrUpdateExistingOnesFromExcelFile(pathAndFileName);
+            }
+            Cursor.Current = Cursors.Default;
         }
 
-        private void btnUpload_Click(object sender, EventArgs e)
+  
+        private void AddNewRecordsOrUpdateExistingOnesFromExcelFile(String strFilePath)
         {
-            string strSelectItem = this.cmbSelectItem.Text.Trim();
-            if (String.IsNullOrEmpty(strSelectItem)) {
-                MessageBox.Show("Please turn on the Selection Items.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            if (String.IsNullOrEmpty(this.txtPath.Text.Trim())) {
-                MessageBox.Show("Please find out the uploading file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            try
-            {
-                bool bJudge = this.txtPath.Text.Contains(".xlsx");
-                this.ImportExcelData(this.txtPath.Text.Trim(), bJudge, strSelectItem);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Upload error, please try again.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                throw;
-            }
-        }
+            string strConn = SqlLib.getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
 
-        private void ImportExcelData(string strFilePath, bool bJudge, string strSelectItem)
-        {
-            string strConn = null;
-            if (bJudge) { strConn = @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + strFilePath + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
-            else { strConn = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + strFilePath + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
+            OleDbConnection ConnToSpreadsheet = new OleDbConnection(strConn);
+            ConnToSpreadsheet.Open();
+            OleDbDataAdapter oleAdapter = new OleDbDataAdapter("SELECT * FROM [Sheet1$]", ConnToSpreadsheet);
+            DataTable RM_ReceivingDataFromExcelFile = new DataTable();
+            oleAdapter.Fill(RM_ReceivingDataFromExcelFile);
+            oleAdapter.Dispose();
+            ConnToSpreadsheet.Dispose();
 
-            OleDbConnection myConn = new OleDbConnection(strConn);
-            myConn.Open();
-            OleDbDataAdapter myAdapter = new OleDbDataAdapter("SELECT * FROM [Sheet1$]", myConn);
-            DataTable myTable = new DataTable();
-            myAdapter.Fill(myTable);
-            myAdapter.Dispose();
-            myConn.Dispose();
-
-            if (myTable.Rows.Count == 0)
-            {
-                MessageBox.Show("There is no data to upload.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                myTable.Clear();
-                myTable.Dispose();
+            if (foundBadDataIntegrityInUploadExcelFileDataTable(RM_ReceivingDataFromExcelFile))
+            { 
+                RM_ReceivingDataFromExcelFile.Dispose();
                 return;
             }
+
+
+            funcLib.releaseExclusiveControlOverDataTable();
+            if (!funcLib.currentUserToUseDataTableExclusively()) { return; };
 
             SqlConnection oneConn = new SqlConnection(SqlLib.StrSqlConnection);
             if (oneConn.State == ConnectionState.Closed) { oneConn.Open(); }
             SqlCommand oneComm = new SqlCommand();
             oneComm.Connection = oneConn;
-            if (strSelectItem.Contains("1-"))
+
+            SqlTransaction Trans1 = oneConn.BeginTransaction();
+            oneComm.Transaction = Trans1;
+
+            StringBuilder keyReferenceMessage = new StringBuilder("");
+            try
             {
-                SqlDataAdapter oneAdpter = new SqlDataAdapter("SELECT [Inbound Delivery No], [Item No], [Lot No] FROM C_RMReceiving", oneConn); 
-                DataTable dtRmRcvd = new DataTable();
-                oneAdpter.Fill(dtRmRcvd);
-                oneAdpter.Dispose();
-
-                #region
-                DataTable dtRecord = new DataTable();
-                dtRecord.Columns.Add("Inbound Delivery No", typeof(string));
-                dtRecord.Columns.Add("Item No", typeof(string));
-                dtRecord.Columns.Add("Lot No", typeof(string));
-                for (int i = 0; i < myTable.Rows.Count; i++)
+                String InboundDeliveryNo = String.Empty;
+                String ItemNo = String.Empty;
+                String LotNo = String.Empty;
+                for (int i = 0; i < RM_ReceivingDataFromExcelFile.Rows.Count; i++)
                 {
-                    string strIDN = myTable.Rows[i]["Inbound Delivery No"].ToString().Trim().ToUpper();
-                    string strIN = myTable.Rows[i]["Item No"].ToString().Trim().ToUpper();
-                    string strLN = myTable.Rows[i]["Lot No"].ToString().Trim().ToUpper();
-                    DataRow[] drHistory = dtRmRcvd.Select("[Inbound Delivery No]='" + strIDN + "' AND [Item No]='" + strIN + "' AND [Lot No]='" + strLN + "'");
-                    if (drHistory.Length == 0)
-                    {
-                        oneComm.Parameters.Add("@TransactionType", SqlDbType.NVarChar).Value = myTable.Rows[i]["Transaction Type"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@CustomsEntryNo", SqlDbType.NVarChar).Value = myTable.Rows[i]["Customs Entry No"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@InboundDeliveryNo", SqlDbType.NVarChar).Value = strIDN;
-                        oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = strIN;
-                        oneComm.Parameters.Add("@ItemDescription", SqlDbType.NVarChar).Value = myTable.Rows[i]["Item Description"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = strLN;
-                        oneComm.Parameters.Add("@BGDNo", SqlDbType.NVarChar).Value = myTable.Rows[i]["BGD No"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@RMEHB", SqlDbType.NVarChar).Value = myTable.Rows[i]["RM EHB"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@RMChnName", SqlDbType.NVarChar).Value = myTable.Rows[i]["RM CHN Name"].ToString().Trim().ToUpper();
-                        string strPoInvoiceQty = myTable.Rows[i]["PO Invoice Qty"].ToString().Trim();
-                        if (String.IsNullOrEmpty(strPoInvoiceQty)) { oneComm.Parameters.Add("@PoInvoiceQty", SqlDbType.Decimal).Value = 0.0M; }
-                        else { oneComm.Parameters.Add("@PoInvoiceQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(strPoInvoiceQty), 6); }
-                        string strPoInvoiceAmt = myTable.Rows[i]["PO Invoice Amount"].ToString().Trim();
-                        if (String.IsNullOrEmpty(strPoInvoiceAmt)) { oneComm.Parameters.Add("@PoInvoiceAmount", SqlDbType.Decimal).Value = 0.0M; }
-                        else { oneComm.Parameters.Add("@PoInvoiceAmount", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(strPoInvoiceAmt), 2); }
-                        decimal dPoUnitPrice = 0.0M;
-                        if (!String.IsNullOrEmpty(strPoInvoiceQty)) { dPoUnitPrice = Math.Round(Convert.ToDecimal(strPoInvoiceAmt) / Convert.ToDecimal(strPoInvoiceQty), 2); }
-                        oneComm.Parameters.Add("@PoUnitPrice", SqlDbType.Decimal).Value = dPoUnitPrice;
-                        oneComm.Parameters.Add("@PoCurrency", SqlDbType.NVarChar).Value = myTable.Rows[i]["PO Currency"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@SapPoNo", SqlDbType.NVarChar).Value = myTable.Rows[i]["SAP PO No"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@RcvdSloc", SqlDbType.NVarChar).Value = myTable.Rows[i]["Rcvd SLOC"].ToString().Trim().ToUpper();
-                        string strGoodsRcvdDate = myTable.Rows[i]["Goods Rcvd Date"].ToString().Trim();
-                        if (String.IsNullOrEmpty(strGoodsRcvdDate)) { oneComm.Parameters.Add("@GoodsRcvdDate", SqlDbType.DateTime).Value = DBNull.Value; }
-                        else { oneComm.Parameters.Add("@GoodsRcvdDate", SqlDbType.DateTime).Value = Convert.ToDateTime(strGoodsRcvdDate); }
-                        oneComm.Parameters.Add("@ShipFromCountry", SqlDbType.NVarChar).Value = myTable.Rows[i]["ShipFrom Country"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@CountryofOrigin", SqlDbType.NVarChar).Value = myTable.Rows[i]["Country of Origin"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
-                        oneComm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
+                    keyReferenceMessage.Clear();
+                    keyReferenceMessage.Append("Record Number is " + (i+1).ToString());
 
-                        oneComm.CommandText = "INSERT INTO C_RMReceiving([Transaction Type], [Customs Entry No], [Inbound Delivery No], [Item No], [Item Description], " +
-                                              "[Lot No], [BGD No], [RM EHB], [RM CHN Name], [PO Invoice Qty], [PO Invoice Amount], [PO Unit Price], [PO Currency], " +
-                                              "[SAP PO No], [Rcvd SLOC], [Goods Rcvd Date], [ShipFrom Country], [Country of Origin], [Creater], [Created Date]) " +
-                                              "VALUES(@TransactionType, @CustomsEntryNo, @InboundDeliveryNo, @ItemNo, @ItemDescription, @LotNo, @BGDNo, @RMEHB, " +
-                                              "@RMChnName, @PoInvoiceQty, @PoInvoiceAmount, @PoUnitPrice, @PoCurrency, @SapPoNo, @RcvdSloc, @GoodsRcvdDate, " +
-                                              "@ShipFromCountry, @CountryofOrigin, @Creater, @CreatedDate)";
+                    InboundDeliveryNo = RM_ReceivingDataFromExcelFile.Rows[i]["Inbound Delivery No"].ToString().Trim().ToUpper();
+                    ItemNo = RM_ReceivingDataFromExcelFile.Rows[i]["Item No"].ToString().Trim().ToUpper();
+                    LotNo = RM_ReceivingDataFromExcelFile.Rows[i]["Lot No"].ToString().Trim().ToUpper();
+
+                    keyReferenceMessage.Append("\n Inbound Delivery No is " + InboundDeliveryNo);
+                    keyReferenceMessage.Append("\n Item No is " + ItemNo);
+                    keyReferenceMessage.Append("\n Lot N is " + LotNo);
+
+                    oneComm.CommandText = "SELECT * FROM C_RMReceiving WHERE " + "[Inbound Delivery No]='" + InboundDeliveryNo + "' AND [Item No]='" + ItemNo + "' AND [Lot No]='" + LotNo + "'";
+                    Boolean hasRecord = Convert.ToInt32(oneComm.ExecuteScalar()) > 0;
+
+                    Boolean OverwriteOldRecord = true;
+                    if (hasRecord)
+                    {
+                        if (MessageBox.Show("Are you sure to overwrite the old record with the latest uploaded data?", "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) { OverwriteOldRecord = false; }
+                    }
+
+                    if (OverwriteOldRecord)
+                    {
+                        oneComm.CommandText = "DELETE FROM C_RMReceiving WHERE " + "[Inbound Delivery No]='" + InboundDeliveryNo + "' AND [Item No]='" + ItemNo + "' AND [Lot No]='" + LotNo + "'";
                         oneComm.ExecuteNonQuery();
-                        oneComm.Parameters.Clear();
                     }
                     else
                     {
-                        DataRow dr = dtRecord.NewRow();
-                        dr[0] = strIDN;
-                        dr[1] = strIN;
-                        dr[2] = strLN;
-                        dtRecord.Rows.Add(dr);
+                        continue;
                     }
-                }
-                dtRmRcvd.Dispose();
-                if (dtRecord.Rows.Count == 0) { MessageBox.Show("Upload successfully.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information); }
-                else 
-                {
-                    PopUpInfoForm PopUpInfoFrm = new PopUpInfoForm();
-                    PopUpInfoFrm.DataTableRecord = dtRecord.Copy();
-                    PopUpInfoFrm.Show();
-                }
-                #endregion
-            }
-            else if (strSelectItem.Contains("2-"))
-            {
-                #region
-                oneComm.CommandText = "SELECT * FROM B_MultiUser";
-                string strUserName = Convert.ToString(oneComm.ExecuteScalar());
-                if (!String.IsNullOrEmpty(strUserName))
-                {
-                    if (String.Compare(strUserName.Trim().ToUpper(), loginFrm.PublicUserName.Trim().ToUpper()) != 0)
-                    {
-                        MessageBox.Show(strUserName + " is handling RM Balance/Drools Balance data. Please wait for his/her to finish the process.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                        oneComm.Dispose();
-                        oneConn.Dispose();
-                        return;
-                    }
-                }
-                else
-                {
-                    oneComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = loginFrm.PublicUserName.ToUpper();
-                    oneComm.CommandText = "INSERT INTO B_MultiUser([UserName]) VALUES(@UserName)";
+
+                    oneComm.Parameters.Add("@TransactionType", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Transaction Type"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@CustomsEntryNo", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Customs Entry No"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@InboundDeliveryNo", SqlDbType.NVarChar).Value = InboundDeliveryNo;
+                    oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = ItemNo;
+                    oneComm.Parameters.Add("@ItemDescription", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Item Description"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = LotNo;
+                    oneComm.Parameters.Add("@BGDNo", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["BGD No"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@RMEHB", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["RM EHB"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@RMChnName", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["RM CHN Name"].ToString().Trim().ToUpper();
+                    string strPoInvoiceQty = RM_ReceivingDataFromExcelFile.Rows[i]["PO Invoice Qty"].ToString().Trim();
+                    if (String.IsNullOrEmpty(strPoInvoiceQty)) { oneComm.Parameters.Add("@PoInvoiceQty", SqlDbType.Decimal).Value = 0.0M; }
+                    else { oneComm.Parameters.Add("@PoInvoiceQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(strPoInvoiceQty), 6); }
+                    string strPoInvoiceAmt = RM_ReceivingDataFromExcelFile.Rows[i]["PO Invoice Amount"].ToString().Trim();
+                    if (String.IsNullOrEmpty(strPoInvoiceAmt)) { oneComm.Parameters.Add("@PoInvoiceAmount", SqlDbType.Decimal).Value = 0.0M; }
+                    else { oneComm.Parameters.Add("@PoInvoiceAmount", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(strPoInvoiceAmt), 2); }
+                    decimal dPoUnitPrice = 0.0M;
+                    if (!String.IsNullOrEmpty(strPoInvoiceQty)) { dPoUnitPrice = Math.Round(Convert.ToDecimal(strPoInvoiceAmt) / Convert.ToDecimal(strPoInvoiceQty), 2); }
+                    oneComm.Parameters.Add("@PoUnitPrice", SqlDbType.Decimal).Value = dPoUnitPrice;
+                    oneComm.Parameters.Add("@PoCurrency", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["PO Currency"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@SapPoNo", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["SAP PO No"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@RcvdSloc", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Rcvd SLOC"].ToString().Trim().ToUpper();
+                    string strGoodsRcvdDate = RM_ReceivingDataFromExcelFile.Rows[i]["Goods Rcvd Date"].ToString().Trim();
+                    if (String.IsNullOrEmpty(strGoodsRcvdDate)) { oneComm.Parameters.Add("@GoodsRcvdDate", SqlDbType.DateTime).Value = DBNull.Value; }
+                    else { oneComm.Parameters.Add("@GoodsRcvdDate", SqlDbType.DateTime).Value = Convert.ToDateTime(strGoodsRcvdDate); }
+                    oneComm.Parameters.Add("@ShipFromCountry", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["ShipFrom Country"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@CountryofOrigin", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Country of Origin"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName();
+                    oneComm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy HH:mm:ss"));
+                    string CustomsRcvdDate = RM_ReceivingDataFromExcelFile.Rows[i]["Customs Rcvd Date"].ToString().Trim();
+                    if (String.IsNullOrEmpty(CustomsRcvdDate)) { oneComm.Parameters.Add("@CustomsRcvdDate", SqlDbType.DateTime).Value = DBNull.Value; }
+                    else { oneComm.Parameters.Add("@CustomsRcvdDate", SqlDbType.DateTime).Value = Convert.ToDateTime(CustomsRcvdDate); }
+                    oneComm.Parameters.Add("@ReceiptsID", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Receipts ID"].ToString().Trim().ToUpper();
+                    oneComm.Parameters.Add("@ReceiptsStatus", SqlDbType.NVarChar).Value = RM_ReceivingDataFromExcelFile.Rows[i]["Receipts Status"].ToString().Trim().ToUpper();
+                    string GateInDate = RM_ReceivingDataFromExcelFile.Rows[i]["Gate In Date"].ToString().Trim();
+                    if (String.IsNullOrEmpty(GateInDate)) { oneComm.Parameters.Add("@GateInDate", SqlDbType.DateTime).Value = DBNull.Value; }
+                    else { oneComm.Parameters.Add("@GateInDate", SqlDbType.DateTime).Value = Convert.ToDateTime(GateInDate); }
+
+                    oneComm.CommandText = "INSERT INTO C_RMReceiving([Transaction Type], [Customs Entry No], [Inbound Delivery No], [Item No], [Item Description], " +
+                                            "[Lot No], [BGD No], [RM EHB], [RM CHN Name], [PO Invoice Qty], [PO Invoice Amount], [PO Unit Price], [PO Currency], " +
+                                            "[SAP PO No], [Rcvd SLOC], [Goods Rcvd Date], [ShipFrom Country], [Country of Origin],[Customs Rcvd Date],[Receipts ID], [Receipts Status],[Gate In Date],[Creater], [Created Date]) " +
+                                            "VALUES(@TransactionType, @CustomsEntryNo, @InboundDeliveryNo, @ItemNo, @ItemDescription, @LotNo, @BGDNo, @RMEHB, " +
+                                            "@RMChnName, @PoInvoiceQty, @PoInvoiceAmount, @PoUnitPrice, @PoCurrency, @SapPoNo, @RcvdSloc, @GoodsRcvdDate," +
+                                            "@ShipFromCountry, @CountryofOrigin, @CustomsRcvdDate, @ReceiptsID, @ReceiptsStatus, @GateInDate, @Creater, @CreatedDate)";
                     oneComm.ExecuteNonQuery();
-                    oneComm.Parameters.Clear();
+                    oneComm.Parameters.Clear();                  
                 }
 
-                DataRow[] drow = myTable.Select("[Customs Rcvd Date] IS NOT NULL");
-                if (drow.Length > 0)
-                {
-                    SqlDataAdapter oneAdpter = new SqlDataAdapter("SELECT [Item No], [Lot No], [Customs Rcvd Date] FROM C_RMReceiving", oneConn);
-                    DataTable dtRmRcvd = new DataTable();
-                    oneAdpter.Fill(dtRmRcvd);
-                    oneAdpter.Dispose();
-                    foreach (DataRow dr in drow)
-                    {
-                        string strCustomsRcvdDate = dr["Customs Rcvd Date"].ToString().Trim();
-                        string strPOInvoiceQty = dr["PO Invoice Qty"].ToString().Trim();
-                        decimal dPOQuantity = 0.0M;
-                        if (!String.IsNullOrEmpty(strPOInvoiceQty)) { dPOQuantity = Math.Round(Convert.ToDecimal(strPOInvoiceQty), 6); }
-                        if (!String.IsNullOrEmpty(strCustomsRcvdDate))
-                        {
-                            string strIN = dr["Item No"].ToString().Trim().ToUpper();
-                            string strLN = dr["Lot No"].ToString().Trim().ToUpper();
-                            string strCusRcvdDate = null;
-                            DataRow[] drHistory = dtRmRcvd.Select("[Item No]='" + strIN + "' AND [Lot No]='" + strLN + "'");
-                            if (drHistory.Length > 0) { strCusRcvdDate = drHistory[0]["Customs Rcvd Date"].ToString().Trim(); }
-
-                            oneComm.Parameters.Clear();
-                            oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = dr["Item No"].ToString().Trim().ToUpper();
-                            oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = dr["Lot No"].ToString().Trim().ToUpper();
-                            oneComm.Parameters.Add("@RMEHB", SqlDbType.NVarChar).Value = dr["RM EHB"].ToString().Trim().ToUpper();
-                            oneComm.Parameters.Add("@BGDNo", SqlDbType.NVarChar).Value = dr["BGD No"].ToString().Trim().ToUpper();
-                            if (String.IsNullOrEmpty(strCusRcvdDate))
-                            {
-                                oneComm.Parameters.Add("@CustomsBalance", SqlDbType.Decimal).Value = dPOQuantity;
-                                oneComm.CommandText = "INSERT INTO C_RMBalance([Item No], [Lot No], [RM EHB], [BGD No], [Customs Balance], [Available RM Balance], " +
-                                                      "[PO Invoice Qty]) VALUES(@ItemNo, @LotNo, @RMEHB, @BGDNo, @CustomsBalance, @CustomsBalance, @CustomsBalance)";
-                                oneComm.ExecuteNonQuery();                               
-                            }
-
-                            oneComm.Parameters.Clear();
-                            oneComm.Parameters.Add("@CustomsRcvdDate", SqlDbType.NVarChar).Value = strCustomsRcvdDate;
-                            oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = dr["Item No"].ToString().Trim().ToUpper();
-                            oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = dr["Lot No"].ToString().Trim().ToUpper();
-                            oneComm.CommandText = @"UPDATE C_RMReceiving SET [Customs Rcvd Date] = @CustomsRcvdDate WHERE [Item No] = @ItemNo AND [Lot No] = @LotNo";
-                            oneComm.ExecuteNonQuery();
-                            oneComm.Parameters.Clear();
-                        }
-                    }
-                    dtRmRcvd.Dispose();
-                }
-                oneComm.Parameters.Clear();
-                oneComm.CommandText = "DELETE FROM B_MultiUser";
-                oneComm.ExecuteNonQuery();
-                MessageBox.Show("Upload successfully.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                #endregion
+                Trans1.Commit();
+                MessageBox.Show("The number of records added or updated is " + RM_ReceivingDataFromExcelFile.Rows.Count , "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            else //if (strSelectItem.Contains("3-"))
+            catch (Exception)
             {
-                #region
-                DataRow[] drow = myTable.Select("[Receipts ID] IS NOT NULL AND [Receipts ID] <> ''");
-                if (drow.Length > 0)
-                {
-                    foreach (DataRow dr in drow)
-                    {
-                        oneComm.Parameters.Clear();
-                        oneComm.Parameters.Add("@ReceiptsID", SqlDbType.NVarChar).Value = dr["Receipts ID"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = dr["Item No"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = dr["Lot No"].ToString().Trim().ToUpper();
-                        oneComm.CommandText = "UPDATE C_RMReceiving SET [Receipts ID] = @ReceiptsID WHERE [Item No] = @ItemNo AND [Lot No] = @LotNo";
-                        oneComm.ExecuteNonQuery();
-                    }
-                }
-                drow = myTable.Select("[Receipts Status] IS NOT NULL AND [Receipts Status] <> ''");
-                if (drow.Length > 0)
-                {
-                    foreach (DataRow dr in drow)
-                    {
-                        oneComm.Parameters.Clear();
-                        oneComm.Parameters.Add("@ReceiptsStatus", SqlDbType.NVarChar).Value = dr["Receipts Status"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = dr["Item No"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = dr["Lot No"].ToString().Trim().ToUpper();
-                        oneComm.CommandText = "UPDATE C_RMReceiving SET [Receipts Status] = @ReceiptsStatus WHERE [Item No] = @ItemNo AND [Lot No] = @LotNo";
-                        oneComm.ExecuteNonQuery();
-                    }
-                }
-                drow = myTable.Select("[Gate In Date] IS NOT NULL");
-                for (int i = 0; i < drow.Length; i++)
-                {
-                    string strGateInDate = drow[i]["Gate In Date"].ToString().Trim();
-                    if (!String.IsNullOrEmpty(strGateInDate))
-                    {
-                        oneComm.Parameters.Clear();
-                        oneComm.Parameters.Add("@GateInDate", SqlDbType.DateTime).Value = Convert.ToDateTime(strGateInDate);
-                        oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = drow[i]["Item No"].ToString().Trim().ToUpper();
-                        oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = drow[i]["Lot No"].ToString().Trim().ToUpper();
-                        oneComm.CommandText = "UPDATE C_RMReceiving SET [Gate In Date] = @GateInDate WHERE [Item No] = @ItemNo AND [Lot No] = @LotNo";
-                        oneComm.ExecuteNonQuery();                       
-                    }
-                }
-                //for (int j = 0; j < myTable.Rows.Count; j++)
-                //{
-                //    oneComm.Parameters.Add("@ReceiptsID", SqlDbType.NVarChar).Value = myTable.Rows[j]["Receipts ID"].ToString().Trim().ToUpper();
-                //    oneComm.Parameters.Add("@ReceiptsStatus", SqlDbType.NVarChar).Value = myTable.Rows[j]["Receipts Status"].ToString().Trim().ToUpper();
-                //    string strGateInDate = myTable.Rows[j]["Gate In Date"].ToString().Trim();
-                //    if (String.IsNullOrEmpty(strGateInDate)) { oneComm.Parameters.Add("@GateInDate", SqlDbType.DateTime).Value = DBNull.Value; }
-                //    else { oneComm.Parameters.Add("@GateInDate", SqlDbType.DateTime).Value = Convert.ToDateTime(strGateInDate); }
-                //    oneComm.Parameters.Add("@InboundDeliveryNo", SqlDbType.NVarChar).Value = myTable.Rows[j]["Inbound Delivery No"].ToString().Trim().ToUpper();
-                //    oneComm.Parameters.Add("@ItemNo", SqlDbType.NVarChar).Value = myTable.Rows[j]["Item No"].ToString().Trim().ToUpper();
-                //    oneComm.Parameters.Add("@LotNo", SqlDbType.NVarChar).Value = myTable.Rows[j]["Lot No"].ToString().Trim().ToUpper();
-                //    oneComm.CommandText = @"UPDATE C_RMReceiving SET [Receipts ID] = @ReceiptsID, [Receipts Status] = @ReceiptsStatus, [Gate In Date] = @GateInDate " +
-                //                           "WHERE [Inbound Delivery No] = @InboundDeliveryNo AND [Item No] = @ItemNo AND [Lot No] = @LotNo";
-                //    oneComm.ExecuteNonQuery();
-                //    oneComm.Parameters.Clear();
-                //}
-                MessageBox.Show("Upload successfully.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                #endregion
+                Trans1.Rollback();
+                MessageBox.Show("Something wrong: " + keyReferenceMessage.ToString() , "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                Trans1.Dispose();
+                oneComm.Dispose();
+            }                    
+            
             oneComm.Dispose();
-            myTable.Dispose();
+            RM_ReceivingDataFromExcelFile.Dispose();
             if (oneConn.State == ConnectionState.Open) { oneConn.Close(); oneConn.Dispose(); }
-        }   
+
+            funcLib.releaseExclusiveControlOverDataTable();
+        }
+        
+        private Boolean foundBadDataIntegrityInUploadExcelFileDataTable(DataTable RM_ReceivingDataFromExcelFile)
+        {
+            Boolean badDataInTable_RM_ReceivingDataFromExcelFile = false;
+
+            if (RM_ReceivingDataFromExcelFile.Rows.Count == 0)
+            {
+                MessageBox.Show("There is no data in the uploaded spreadsheet file.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                badDataInTable_RM_ReceivingDataFromExcelFile = true;
+            }
+
+            try
+            {
+                for (int i = 0; i< RM_ReceivingDataFromExcelFile.Rows.Count; i++)
+                {
+                    if (String.IsNullOrEmpty(RM_ReceivingDataFromExcelFile.Rows[i]["Inbound Delivery No"].ToString()) 
+                        || String.IsNullOrEmpty(RM_ReceivingDataFromExcelFile.Rows[i]["Item No"].ToString()) 
+                        || String.IsNullOrEmpty(RM_ReceivingDataFromExcelFile.Rows[i]["Lot No"].ToString()))
+                    {
+                        MessageBox.Show("Empty value is forbidden for Inbound delivery no, item no and lot no. \n Please check the data in row " + (i+2) + " of Sheet 'Sheet1'.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        badDataInTable_RM_ReceivingDataFromExcelFile = true;
+                        break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Something wrong with fields of Inbound delivery no, item no and lot no. ", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                badDataInTable_RM_ReceivingDataFromExcelFile = true;
+            }
+   
+            return badDataInTable_RM_ReceivingDataFromExcelFile;
+        }
+
+        private void cbCreationDates_CheckedChanged(object sender, EventArgs e)
+        {
+            dtpFrom.Enabled = cbCreationDates.Checked;
+            dtpTo.Enabled = cbCreationDates.Checked;
+        }
+
+        private void cbColumnName_CheckedChanged(object sender, EventArgs e)
+        {
+            cmbFieldName.Enabled = cbColumnName.Checked;
+            txtFieldName.Enabled = cbColumnName.Checked;
+        }
+
+        private void bnDownloadToEXCEL_Click(object sender, EventArgs e)
+        {
+            
+            if (!cbColumnName.Checked && !cbCreationDates.Checked)
+            {
+                MessageBox.Show("Please make sure you apply the filer on dates and fields before preview the records in RM receiving table.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Cursor.Current = Cursors.WaitCursor;
+
+            String selectRecordsFromTableRMreceiving = " SELECT * FROM C_RMReceiving " + getSQL_WhereConditionsStatement() + " ORDER BY [Created Date] DESC, [Item No], [Lot No]";
+
+            SqlConnection browseConn = new SqlConnection(SqlLib.StrSqlConnection);
+            if (browseConn.State == ConnectionState.Closed) { browseConn.Open(); }
+            SqlDataAdapter browseAdapterR = new SqlDataAdapter(selectRecordsFromTableRMreceiving, browseConn);
+            DataTable dtFillRmRcvd = new DataTable();
+            browseAdapterR.Fill(dtFillRmRcvd);
+            browseAdapterR.Dispose();
+            browseConn.Dispose();
+
+            dtFillRmRcvd.Columns.Remove("Creater");
+            dtFillRmRcvd.Columns.Remove("Created Date");
+            dtFillRmRcvd.AcceptChanges();
+
+            Dictionary<string, DataTable> ExcelSheetNameAndDataTable = new Dictionary<string, DataTable>();
+            ExcelSheetNameAndDataTable.Add("Sheet1", dtFillRmRcvd);
+
+            funcLib.exportDataTablesToSpreadSheets(ExcelSheetNameAndDataTable);
+
+            Cursor.Current = Cursors.Default;
+        }
+        
     }
 }

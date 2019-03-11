@@ -32,17 +32,18 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.bnDownloadToEXCEL = new System.Windows.Forms.Button();
+            this.btnBrowse = new System.Windows.Forms.Button();
+            this.cbColumnName = new System.Windows.Forms.CheckBox();
+            this.cbCreationDates = new System.Windows.Forms.CheckBox();
             this.btnAdjust = new System.Windows.Forms.Button();
             this.cmbAdjustment = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.txtFieldName = new System.Windows.Forms.TextBox();
             this.cmbFieldName = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.btnBrowse = new System.Windows.Forms.Button();
             this.dtpTo = new System.Windows.Forms.DateTimePicker();
             this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.dtpFrom = new System.Windows.Forms.DateTimePicker();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.dgvRMReceiving = new System.Windows.Forms.DataGridView();
@@ -56,9 +57,8 @@
             this.llinkPrompt = new System.Windows.Forms.LinkLabel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnDownload = new System.Windows.Forms.Button();
-            this.btnUpload = new System.Windows.Forms.Button();
             this.txtPath = new System.Windows.Forms.TextBox();
-            this.btnSearch = new System.Windows.Forms.Button();
+            this.btnSearchAndUpload = new System.Windows.Forms.Button();
             this.cmbSelectItem = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
@@ -73,22 +73,82 @@
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(178)))), ((int)(((byte)(235)))), ((int)(((byte)(140)))));
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panel1.Controls.Add(this.bnDownloadToEXCEL);
+            this.panel1.Controls.Add(this.btnBrowse);
+            this.panel1.Controls.Add(this.cbColumnName);
+            this.panel1.Controls.Add(this.cbCreationDates);
             this.panel1.Controls.Add(this.btnAdjust);
             this.panel1.Controls.Add(this.cmbAdjustment);
             this.panel1.Controls.Add(this.label3);
             this.panel1.Controls.Add(this.groupBox6);
             this.panel1.Controls.Add(this.txtFieldName);
             this.panel1.Controls.Add(this.cmbFieldName);
-            this.panel1.Controls.Add(this.label4);
-            this.panel1.Controls.Add(this.btnBrowse);
             this.panel1.Controls.Add(this.dtpTo);
             this.panel1.Controls.Add(this.label2);
-            this.panel1.Controls.Add(this.label1);
             this.panel1.Controls.Add(this.dtpFrom);
-            this.panel1.Location = new System.Drawing.Point(1, 72);
+            this.panel1.Location = new System.Drawing.Point(2, 111);
+            this.panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1232, 60);
+            this.panel1.Size = new System.Drawing.Size(1846, 90);
             this.panel1.TabIndex = 23;
+            // 
+            // bnDownloadToEXCEL
+            // 
+            this.bnDownloadToEXCEL.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bnDownloadToEXCEL.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.bnDownloadToEXCEL.Image = ((System.Drawing.Image)(resources.GetObject("bnDownloadToEXCEL.Image")));
+            this.bnDownloadToEXCEL.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.bnDownloadToEXCEL.Location = new System.Drawing.Point(1173, 14);
+            this.bnDownloadToEXCEL.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.bnDownloadToEXCEL.Name = "bnDownloadToEXCEL";
+            this.bnDownloadToEXCEL.Size = new System.Drawing.Size(153, 51);
+            this.bnDownloadToEXCEL.TabIndex = 9;
+            this.bnDownloadToEXCEL.Text = " Download";
+            this.bnDownloadToEXCEL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.bnDownloadToEXCEL.UseVisualStyleBackColor = true;
+            this.bnDownloadToEXCEL.Click += new System.EventHandler(this.bnDownloadToEXCEL_Click);
+            // 
+            // btnBrowse
+            // 
+            this.btnBrowse.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnBrowse.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnBrowse.Image = ((System.Drawing.Image)(resources.GetObject("btnBrowse.Image")));
+            this.btnBrowse.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnBrowse.Location = new System.Drawing.Point(1339, 14);
+            this.btnBrowse.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.Size = new System.Drawing.Size(147, 51);
+            this.btnBrowse.TabIndex = 18;
+            this.btnBrowse.Text = "  Preview";
+            this.btnBrowse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
+            // cbColumnName
+            // 
+            this.cbColumnName.AutoSize = true;
+            this.cbColumnName.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.cbColumnName.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.cbColumnName.Location = new System.Drawing.Point(8, 25);
+            this.cbColumnName.Name = "cbColumnName";
+            this.cbColumnName.Size = new System.Drawing.Size(160, 26);
+            this.cbColumnName.TabIndex = 24;
+            this.cbColumnName.Text = "Column Name";
+            this.cbColumnName.UseVisualStyleBackColor = true;
+            this.cbColumnName.CheckedChanged += new System.EventHandler(this.cbColumnName_CheckedChanged);
+            // 
+            // cbCreationDates
+            // 
+            this.cbCreationDates.AutoSize = true;
+            this.cbCreationDates.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.cbCreationDates.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.cbCreationDates.Location = new System.Drawing.Point(597, 25);
+            this.cbCreationDates.Name = "cbCreationDates";
+            this.cbCreationDates.Size = new System.Drawing.Size(177, 26);
+            this.cbCreationDates.TabIndex = 23;
+            this.cbCreationDates.Text = "Create between";
+            this.cbCreationDates.UseVisualStyleBackColor = true;
+            this.cbCreationDates.CheckedChanged += new System.EventHandler(this.cbCreationDates_CheckedChanged);
             // 
             // btnAdjust
             // 
@@ -96,9 +156,10 @@
             this.btnAdjust.ForeColor = System.Drawing.Color.Blue;
             this.btnAdjust.Image = ((System.Drawing.Image)(resources.GetObject("btnAdjust.Image")));
             this.btnAdjust.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnAdjust.Location = new System.Drawing.Point(1116, 9);
+            this.btnAdjust.Location = new System.Drawing.Point(1680, 17);
+            this.btnAdjust.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnAdjust.Name = "btnAdjust";
-            this.btnAdjust.Size = new System.Drawing.Size(90, 33);
+            this.btnAdjust.Size = new System.Drawing.Size(135, 51);
             this.btnAdjust.TabIndex = 22;
             this.btnAdjust.Text = "   Adjust";
             this.btnAdjust.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -114,12 +175,12 @@
             this.cmbAdjustment.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
             this.cmbAdjustment.FormattingEnabled = true;
             this.cmbAdjustment.Items.AddRange(new object[] {
-            "",
             "Edition",
             "Deletion"});
-            this.cmbAdjustment.Location = new System.Drawing.Point(1009, 13);
+            this.cmbAdjustment.Location = new System.Drawing.Point(1514, 23);
+            this.cmbAdjustment.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbAdjustment.Name = "cmbAdjustment";
-            this.cmbAdjustment.Size = new System.Drawing.Size(100, 24);
+            this.cmbAdjustment.Size = new System.Drawing.Size(148, 29);
             this.cmbAdjustment.TabIndex = 21;
             this.cmbAdjustment.SelectedIndexChanged += new System.EventHandler(this.cmbAdjustment_SelectedIndexChanged);
             // 
@@ -128,76 +189,57 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Blue;
-            this.label3.Location = new System.Drawing.Point(889, 17);
+            this.label3.Location = new System.Drawing.Point(1326, 28);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(118, 17);
+            this.label3.Size = new System.Drawing.Size(0, 25);
             this.label3.TabIndex = 20;
-            this.label3.Text = "Adjustment Items";
             // 
             // groupBox6
             // 
-            this.groupBox6.Location = new System.Drawing.Point(877, -6);
+            this.groupBox6.Location = new System.Drawing.Point(1500, -9);
+            this.groupBox6.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(2, 64);
+            this.groupBox6.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox6.Size = new System.Drawing.Size(3, 98);
             this.groupBox6.TabIndex = 19;
             this.groupBox6.TabStop = false;
             // 
             // txtFieldName
             // 
+            this.txtFieldName.Enabled = false;
             this.txtFieldName.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
-            this.txtFieldName.Location = new System.Drawing.Point(209, 14);
+            this.txtFieldName.Location = new System.Drawing.Point(345, 22);
+            this.txtFieldName.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtFieldName.Name = "txtFieldName";
-            this.txtFieldName.Size = new System.Drawing.Size(160, 22);
+            this.txtFieldName.Size = new System.Drawing.Size(238, 29);
             this.txtFieldName.TabIndex = 13;
             // 
             // cmbFieldName
             // 
+            this.cmbFieldName.Enabled = false;
             this.cmbFieldName.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
             this.cmbFieldName.FormattingEnabled = true;
             this.cmbFieldName.Items.AddRange(new object[] {
-            "",
             "Item No",
             "Lot No",
             "BGD No"});
-            this.cmbFieldName.Location = new System.Drawing.Point(106, 13);
+            this.cmbFieldName.Location = new System.Drawing.Point(189, 22);
+            this.cmbFieldName.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbFieldName.Name = "cmbFieldName";
-            this.cmbFieldName.Size = new System.Drawing.Size(100, 24);
+            this.cmbFieldName.Size = new System.Drawing.Size(148, 29);
             this.cmbFieldName.TabIndex = 12;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.label4.Location = new System.Drawing.Point(22, 17);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(78, 17);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Field Name";
-            // 
-            // btnBrowse
-            // 
-            this.btnBrowse.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnBrowse.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnBrowse.Image = ((System.Drawing.Image)(resources.GetObject("btnBrowse.Image")));
-            this.btnBrowse.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnBrowse.Location = new System.Drawing.Point(770, 9);
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(90, 33);
-            this.btnBrowse.TabIndex = 18;
-            this.btnBrowse.Text = "  Preview";
-            this.btnBrowse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // dtpTo
             // 
             this.dtpTo.CalendarFont = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.dtpTo.Enabled = false;
             this.dtpTo.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.dtpTo.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpTo.Location = new System.Drawing.Point(652, 14);
+            this.dtpTo.Location = new System.Drawing.Point(1001, 22);
+            this.dtpTo.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dtpTo.Name = "dtpTo";
-            this.dtpTo.Size = new System.Drawing.Size(110, 23);
+            this.dtpTo.Size = new System.Drawing.Size(163, 31);
             this.dtpTo.TabIndex = 17;
             this.dtpTo.ValueChanged += new System.EventHandler(this.dtpTo_ValueChanged);
             this.dtpTo.KeyUp += new System.Windows.Forms.KeyEventHandler(this.dtpTo_KeyUp);
@@ -207,31 +249,23 @@
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label2.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.label2.Location = new System.Drawing.Point(624, 17);
+            this.label2.Location = new System.Drawing.Point(949, 26);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(24, 17);
+            this.label2.Size = new System.Drawing.Size(46, 25);
             this.label2.TabIndex = 16;
-            this.label2.Text = "To";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.label1.Location = new System.Drawing.Point(380, 17);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(124, 17);
-            this.label1.TabIndex = 14;
-            this.label1.Text = "Created Date From";
+            this.label2.Text = "and";
             // 
             // dtpFrom
             // 
             this.dtpFrom.CalendarFont = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.dtpFrom.Enabled = false;
             this.dtpFrom.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.dtpFrom.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpFrom.Location = new System.Drawing.Point(508, 14);
+            this.dtpFrom.Location = new System.Drawing.Point(781, 22);
+            this.dtpFrom.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dtpFrom.Name = "dtpFrom";
-            this.dtpFrom.Size = new System.Drawing.Size(110, 23);
+            this.dtpFrom.Size = new System.Drawing.Size(163, 31);
             this.dtpFrom.TabIndex = 15;
             this.dtpFrom.ValueChanged += new System.EventHandler(this.dtpFrom_ValueChanged);
             this.dtpFrom.KeyUp += new System.Windows.Forms.KeyEventHandler(this.dtpFrom_KeyUp);
@@ -241,9 +275,11 @@
             this.groupBox1.Controls.Add(this.dgvRMReceiving);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.groupBox1.ForeColor = System.Drawing.Color.Navy;
-            this.groupBox1.Location = new System.Drawing.Point(1, 132);
+            this.groupBox1.Location = new System.Drawing.Point(2, 203);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1232, 420);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Size = new System.Drawing.Size(1848, 646);
             this.groupBox1.TabIndex = 25;
             this.groupBox1.TabStop = false;
             // 
@@ -268,11 +304,12 @@
             this.dgvRMReceiving.DefaultCellStyle = dataGridViewCellStyle1;
             this.dgvRMReceiving.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvRMReceiving.GridColor = System.Drawing.Color.YellowGreen;
-            this.dgvRMReceiving.Location = new System.Drawing.Point(3, 19);
+            this.dgvRMReceiving.Location = new System.Drawing.Point(4, 29);
+            this.dgvRMReceiving.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dgvRMReceiving.Name = "dgvRMReceiving";
             this.dgvRMReceiving.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgvRMReceiving.RowTemplate.Height = 23;
-            this.dgvRMReceiving.Size = new System.Drawing.Size(1226, 398);
+            this.dgvRMReceiving.Size = new System.Drawing.Size(1840, 612);
             this.dgvRMReceiving.TabIndex = 24;
             this.dgvRMReceiving.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvRMReceiving_CellClick);
             this.dgvRMReceiving.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvRMReceiving_ColumnHeaderMouseClick);
@@ -282,7 +319,7 @@
             // 
             this.dgvCheck.HeaderText = "Select";
             this.dgvCheck.Name = "dgvCheck";
-            this.dgvCheck.Width = 48;
+            this.dgvCheck.Width = 67;
             // 
             // ClickLink
             // 
@@ -303,10 +340,10 @@
             this.fakeLabel2.CImage = null;
             this.fakeLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
             this.fakeLabel2.LabelText = "";
-            this.fakeLabel2.Location = new System.Drawing.Point(1, 61);
-            this.fakeLabel2.Margin = new System.Windows.Forms.Padding(4);
+            this.fakeLabel2.Location = new System.Drawing.Point(2, 94);
+            this.fakeLabel2.Margin = new System.Windows.Forms.Padding(6);
             this.fakeLabel2.Name = "fakeLabel2";
-            this.fakeLabel2.Size = new System.Drawing.Size(1232, 11);
+            this.fakeLabel2.Size = new System.Drawing.Size(1848, 17);
             this.fakeLabel2.TabIndex = 10;
             // 
             // groupBox2
@@ -314,9 +351,11 @@
             this.groupBox2.Controls.Add(this.dgvRMAdjustment);
             this.groupBox2.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.groupBox2.ForeColor = System.Drawing.Color.Navy;
-            this.groupBox2.Location = new System.Drawing.Point(1, 557);
+            this.groupBox2.Location = new System.Drawing.Point(2, 857);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(1232, 103);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox2.Size = new System.Drawing.Size(1848, 158);
             this.groupBox2.TabIndex = 28;
             this.groupBox2.TabStop = false;
             // 
@@ -338,11 +377,12 @@
             this.dgvRMAdjustment.DefaultCellStyle = dataGridViewCellStyle2;
             this.dgvRMAdjustment.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvRMAdjustment.GridColor = System.Drawing.Color.YellowGreen;
-            this.dgvRMAdjustment.Location = new System.Drawing.Point(3, 19);
+            this.dgvRMAdjustment.Location = new System.Drawing.Point(4, 29);
+            this.dgvRMAdjustment.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dgvRMAdjustment.Name = "dgvRMAdjustment";
             this.dgvRMAdjustment.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgvRMAdjustment.RowTemplate.Height = 23;
-            this.dgvRMAdjustment.Size = new System.Drawing.Size(1226, 81);
+            this.dgvRMAdjustment.Size = new System.Drawing.Size(1840, 124);
             this.dgvRMAdjustment.TabIndex = 27;
             // 
             // fakeLabel1
@@ -355,10 +395,10 @@
             this.fakeLabel1.CImage = null;
             this.fakeLabel1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
             this.fakeLabel1.LabelText = "";
-            this.fakeLabel1.Location = new System.Drawing.Point(1, 553);
-            this.fakeLabel1.Margin = new System.Windows.Forms.Padding(4);
+            this.fakeLabel1.Location = new System.Drawing.Point(2, 851);
+            this.fakeLabel1.Margin = new System.Windows.Forms.Padding(6);
             this.fakeLabel1.Name = "fakeLabel1";
-            this.fakeLabel1.Size = new System.Drawing.Size(1232, 11);
+            this.fakeLabel1.Size = new System.Drawing.Size(1848, 17);
             this.fakeLabel1.TabIndex = 26;
             // 
             // panel3
@@ -368,14 +408,14 @@
             this.panel3.Controls.Add(this.llinkPrompt);
             this.panel3.Controls.Add(this.groupBox3);
             this.panel3.Controls.Add(this.btnDownload);
-            this.panel3.Controls.Add(this.btnUpload);
             this.panel3.Controls.Add(this.txtPath);
-            this.panel3.Controls.Add(this.btnSearch);
+            this.panel3.Controls.Add(this.btnSearchAndUpload);
             this.panel3.Controls.Add(this.cmbSelectItem);
             this.panel3.Controls.Add(this.label10);
-            this.panel3.Location = new System.Drawing.Point(1, 1);
+            this.panel3.Location = new System.Drawing.Point(2, 2);
+            this.panel3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(1232, 60);
+            this.panel3.Size = new System.Drawing.Size(1846, 90);
             this.panel3.TabIndex = 9;
             // 
             // llinkPrompt
@@ -383,9 +423,10 @@
             this.llinkPrompt.AutoSize = true;
             this.llinkPrompt.Font = new System.Drawing.Font("Microsoft YaHei", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.llinkPrompt.LinkColor = System.Drawing.Color.Navy;
-            this.llinkPrompt.Location = new System.Drawing.Point(990, 20);
+            this.llinkPrompt.Location = new System.Drawing.Point(1497, 31);
+            this.llinkPrompt.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.llinkPrompt.Name = "llinkPrompt";
-            this.llinkPrompt.Size = new System.Drawing.Size(87, 17);
+            this.llinkPrompt.Size = new System.Drawing.Size(126, 25);
             this.llinkPrompt.TabIndex = 6;
             this.llinkPrompt.TabStop = true;
             this.llinkPrompt.Text = "Specification";
@@ -393,9 +434,11 @@
             // 
             // groupBox3
             // 
-            this.groupBox3.Location = new System.Drawing.Point(1089, -7);
+            this.groupBox3.Location = new System.Drawing.Point(1634, -11);
+            this.groupBox3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(2, 64);
+            this.groupBox3.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox3.Size = new System.Drawing.Size(3, 98);
             this.groupBox3.TabIndex = 8;
             this.groupBox3.TabStop = false;
             // 
@@ -405,65 +448,55 @@
             this.btnDownload.ForeColor = System.Drawing.Color.DarkSlateBlue;
             this.btnDownload.Image = ((System.Drawing.Image)(resources.GetObject("btnDownload.Image")));
             this.btnDownload.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnDownload.Location = new System.Drawing.Point(1106, 12);
+            this.btnDownload.Location = new System.Drawing.Point(1647, 5);
+            this.btnDownload.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnDownload.Name = "btnDownload";
-            this.btnDownload.Size = new System.Drawing.Size(100, 33);
+            this.btnDownload.Size = new System.Drawing.Size(170, 83);
             this.btnDownload.TabIndex = 7;
-            this.btnDownload.Text = " Download";
+            this.btnDownload.Text = " Download\r\n All Records";
             this.btnDownload.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnDownload.UseVisualStyleBackColor = true;
             this.btnDownload.Click += new System.EventHandler(this.btnDownload_Click);
             // 
-            // btnUpload
-            // 
-            this.btnUpload.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnUpload.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnUpload.Image = ((System.Drawing.Image)(resources.GetObject("btnUpload.Image")));
-            this.btnUpload.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnUpload.Location = new System.Drawing.Point(884, 12);
-            this.btnUpload.Name = "btnUpload";
-            this.btnUpload.Size = new System.Drawing.Size(100, 33);
-            this.btnUpload.TabIndex = 5;
-            this.btnUpload.Text = "Upload File";
-            this.btnUpload.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnUpload.UseVisualStyleBackColor = true;
-            this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
-            // 
             // txtPath
             // 
             this.txtPath.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
-            this.txtPath.Location = new System.Drawing.Point(559, 17);
+            this.txtPath.Location = new System.Drawing.Point(908, 26);
+            this.txtPath.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtPath.Name = "txtPath";
-            this.txtPath.Size = new System.Drawing.Size(320, 22);
+            this.txtPath.Size = new System.Drawing.Size(582, 29);
             this.txtPath.TabIndex = 4;
             // 
-            // btnSearch
+            // btnSearchAndUpload
             // 
-            this.btnSearch.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSearch.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.btnSearch.Image = ((System.Drawing.Image)(resources.GetObject("btnSearch.Image")));
-            this.btnSearch.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnSearch.Location = new System.Drawing.Point(455, 12);
-            this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(100, 33);
-            this.btnSearch.TabIndex = 3;
-            this.btnSearch.Text = " Search File";
-            this.btnSearch.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnSearch.UseVisualStyleBackColor = true;
-            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            this.btnSearchAndUpload.Cursor = System.Windows.Forms.Cursors.Default;
+            this.btnSearchAndUpload.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSearchAndUpload.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnSearchAndUpload.Image = ((System.Drawing.Image)(resources.GetObject("btnSearchAndUpload.Image")));
+            this.btnSearchAndUpload.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnSearchAndUpload.Location = new System.Drawing.Point(680, 22);
+            this.btnSearchAndUpload.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSearchAndUpload.Name = "btnSearchAndUpload";
+            this.btnSearchAndUpload.Size = new System.Drawing.Size(218, 38);
+            this.btnSearchAndUpload.TabIndex = 3;
+            this.btnSearchAndUpload.Text = " Search and Upload";
+            this.btnSearchAndUpload.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnSearchAndUpload.UseVisualStyleBackColor = true;
+            this.btnSearchAndUpload.Click += new System.EventHandler(this.btnSearchAndUpload_Click);
             // 
             // cmbSelectItem
             // 
+            this.cmbSelectItem.Enabled = false;
             this.cmbSelectItem.Font = new System.Drawing.Font("Microsoft YaHei", 8F);
             this.cmbSelectItem.FormattingEnabled = true;
             this.cmbSelectItem.Items.AddRange(new object[] {
-            "",
-            "1-Import New RM Receiving Data",
+            "1-Import New Or Update existing records",
             "2-Batch Update Customs Rcvd Date",
             "3-Batch Update Receipts ID, Status And Gate In Date"});
-            this.cmbSelectItem.Location = new System.Drawing.Point(131, 15);
+            this.cmbSelectItem.Location = new System.Drawing.Point(196, 23);
+            this.cmbSelectItem.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbSelectItem.Name = "cmbSelectItem";
-            this.cmbSelectItem.Size = new System.Drawing.Size(310, 24);
+            this.cmbSelectItem.Size = new System.Drawing.Size(463, 29);
             this.cmbSelectItem.TabIndex = 2;
             // 
             // label10
@@ -471,17 +504,18 @@
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label10.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.label10.Location = new System.Drawing.Point(22, 19);
+            this.label10.Location = new System.Drawing.Point(33, 29);
+            this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(102, 17);
+            this.label10.Size = new System.Drawing.Size(148, 25);
             this.label10.TabIndex = 1;
             this.label10.Text = "Selection Items";
             // 
             // RMReceivingForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1234, 661);
+            this.ClientSize = new System.Drawing.Size(1833, 738);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.fakeLabel1);
             this.Controls.Add(this.groupBox2);
@@ -489,6 +523,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.panel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "RMReceivingForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "RM Receiving Operation Interface ";
@@ -512,7 +547,6 @@
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.DateTimePicker dtpTo;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.DateTimePicker dtpFrom;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.DataGridView dgvRMReceiving;
@@ -520,13 +554,11 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.DataGridView dgvRMAdjustment;
         private UserControls.FakeLabel fakeLabel1;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.ComboBox cmbSelectItem;
-        private System.Windows.Forms.Button btnUpload;
         private System.Windows.Forms.TextBox txtPath;
-        private System.Windows.Forms.Button btnSearch;
+        private System.Windows.Forms.Button btnSearchAndUpload;
         private System.Windows.Forms.Button btnDownload;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.ComboBox cmbFieldName;
@@ -538,5 +570,8 @@
         private System.Windows.Forms.LinkLabel llinkPrompt;
         private System.Windows.Forms.DataGridViewCheckBoxColumn dgvCheck;
         private System.Windows.Forms.DataGridViewLinkColumn ClickLink;
+        private System.Windows.Forms.CheckBox cbCreationDates;
+        private System.Windows.Forms.CheckBox cbColumnName;
+        private System.Windows.Forms.Button bnDownloadToEXCEL;
     }
 }

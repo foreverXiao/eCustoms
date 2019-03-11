@@ -142,7 +142,7 @@
             this.btnSearchAndUpload.TabIndex = 5;
             this.btnSearchAndUpload.Text = "Search and Upload Excel Draft BOM";
             this.btnSearchAndUpload.UseVisualStyleBackColor = true;
-            this.btnSearchAndUpload.Click += new System.EventHandler(this.btnSearchAndUpload_Click);
+            this.btnSearchAndUpload.Click += new System.EventHandler(this.btnSearchAndUploadDraftBOM_Click);
             // 
             // label1
             // 

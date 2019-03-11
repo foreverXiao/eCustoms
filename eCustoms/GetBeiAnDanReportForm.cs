@@ -603,7 +603,7 @@ namespace eCustoms
             sqlComm.Parameters.AddWithValue("@BeiAnDanID", strBeiAnDanID);
             sqlComm.Parameters.AddWithValue("@BeiAnDanNo", strBeiAnDanNo);
             sqlComm.Parameters.AddWithValue("@BeiAnDanDate", dtNow);
-            sqlComm.Parameters.AddWithValue("@Creater", loginFrm.PublicUserName);
+            sqlComm.Parameters.AddWithValue("@Creater", funcLib.getCurrentUserName());
             sqlComm.ExecuteNonQuery();
             sqlComm.Parameters.Clear();
 

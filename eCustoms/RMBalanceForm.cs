@@ -141,7 +141,7 @@ namespace eCustoms
             oneComm.Connection = oneConn;
             try
             {
-                string strUserName = loginFrm.PublicUserName;
+                string strUserName = funcLib.getCurrentUserName();
                 oneComm.Parameters.Add("@LoginName", SqlDbType.NVarChar).Value = strUserName;
                 oneComm.CommandText = "SELECT [Group] FROM " + FUVs.tableOfUsers + " WHERE [LoginName] = @LoginName";
                 string strGroup = Convert.ToString(oneComm.ExecuteScalar()).Trim().ToUpper();
@@ -196,7 +196,7 @@ namespace eCustoms
             string strUserName = Convert.ToString(oneComm.ExecuteScalar());
             if (!String.IsNullOrEmpty(strUserName))
             {
-                if (String.Compare(strUserName.Trim().ToUpper(), loginFrm.PublicUserName.Trim().ToUpper()) != 0)
+                if (String.Compare(strUserName.Trim().ToUpper(), funcLib.getCurrentUserName().Trim().ToUpper()) != 0)
                 {
                     MessageBox.Show(strUserName + " is handling RM Balance/Drools Balance data. Please wait for his/her to finish the process.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     oneComm.Dispose();
@@ -206,7 +206,7 @@ namespace eCustoms
             }
             else
             {
-                oneComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = loginFrm.PublicUserName.ToUpper();
+                oneComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName().ToUpper();
                 oneComm.CommandText = @"INSERT INTO B_MultiUser([UserName]) VALUES(@UserName)";
                 oneComm.ExecuteNonQuery();
                 oneComm.Parameters.RemoveAt("@UserName");
@@ -257,7 +257,7 @@ namespace eCustoms
                         oneComm.Parameters.Add("@BGDNo", SqlDbType.NVarChar).Value = strBgdNo;
                         oneComm.Parameters.Add("@AdjAvailableQty", SqlDbType.Decimal).Value = dAdjAvailableQty;
                         oneComm.Parameters.Add("@AdjCustomsQty", SqlDbType.Decimal).Value = dAdjCustomsQty;
-                        oneComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
+                        oneComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName();
                         oneComm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
                         oneComm.CommandText = @"INSERT INTO L_RMBalance_Adjustment([Item No], [Lot No], [RM EHB], [BGD No], [ADJ Available Qty], [ADJ Customs Qty], [Creater], " +
                                                "[Created Date]) VALUES(@ItemNo, @LotNo, @RMEHB, @BGDNo, @AdjAvailableQty, @AdjCustomsQty, @Creater, @CreatedDate)";

@@ -154,14 +154,18 @@ namespace eCustoms
             }
         }
 
-        private void btnSearchAndUpload_Click(object sender, EventArgs e)
+        private void btnSearchAndUploadDraftBOM_Click(object sender, EventArgs e)
         {
+            
             String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPath);
             if (!String.IsNullOrEmpty(pathAndFileName))
             {
+                Cursor.Current = Cursors.WaitCursor;
                 this.ImportExcelData(pathAndFileName);
                 ComsumptionRateEuqalTo100Percent();
+                Cursor.Current = Cursors.Default;
             };
+            
         }
 
 
@@ -175,7 +179,7 @@ namespace eCustoms
 
         public void ImportExcelData(string strFilePath)
         {
-            string strConn = getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
+            String strConn = SqlLib.getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
 
             OleDbConnection ExcelOleConnection = new OleDbConnection(strConn);
             ExcelOleConnection.Open();
@@ -413,7 +417,7 @@ namespace eCustoms
                 string DroolsQty = ComponentsAndOutputPerProcessOrder.Rows[j]["Drools Qty"].ToString().Trim();
                 if (String.IsNullOrEmpty(DroolsQty)) { sqlCommands.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = 0.0; }
                 else { sqlCommands.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(DroolsQty)), 6); }
-                sqlCommands.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
+                sqlCommands.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName();
                 sqlCommands.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
 
                 sqlCommands.CommandText = "INSERT INTO M_DailyBOM([Process Order No], [Actual Start Date], [Actual End Date], [Batch Path], [Batch No], [FG No], " +
@@ -926,7 +930,7 @@ namespace eCustoms
 
         public void ImportBom(string strFilePath)
         {
-            string strConn = getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
+            string strConn = SqlLib.getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
 
             OleDbConnection fzConn = new OleDbConnection(strConn);
             fzConn.Open();
@@ -989,7 +993,7 @@ namespace eCustoms
                 BomFzComm.Parameters.Add("@RmQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(dr["RM Qty"].ToString().Trim())), 6); 
                 BomFzComm.Parameters.Add("@TotalInputQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(dr["Total Input Qty"].ToString().Trim())), 6); 
                 BomFzComm.Parameters.Add("@DroolsQty", SqlDbType.Decimal).Value = Math.Round(Convert.ToDecimal(double.Parse(dr["Drools Qty"].ToString().Trim())), 6); 
-                BomFzComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = loginFrm.PublicUserName;
+                BomFzComm.Parameters.Add("@Creater", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName();
                 BomFzComm.Parameters.Add("@CreatedDate", SqlDbType.DateTime).Value = Convert.ToDateTime(System.DateTime.Now.ToString("M/d/yyyy"));
 
                 BomFzComm.CommandText = "INSERT INTO M_DailyBOM([Process Order No], [Actual Start Date], [Actual End Date], [Batch Path], [Batch No], [FG No], " +
@@ -1017,6 +1021,7 @@ namespace eCustoms
             String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPathRpt);
             if (!String.IsNullOrEmpty(pathAndFileName))
             {
+                Cursor.Current = Cursors.WaitCursor;
                 try
                 {
                     String messageF = this.TransformRawDataOfProdutionInputAndOutputToStandardFormat(pathAndFileName);
@@ -1026,7 +1031,9 @@ namespace eCustoms
                     };
                 }
                 catch (Exception) { throw; }
+                Cursor.Current = Cursors.WaitCursor;
             };
+            
         }
 
 
@@ -1034,20 +1041,27 @@ namespace eCustoms
         {
             String messageToBeReturned = String.Empty;
 
-            string strConn = getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
+            const String FG_Quantiy_Increased_MT = "101";
+            const String FG_Quantiy_Decreased_MT = "102";
+            const String RM_Quantiy_Increased_MT = "261";
+            const String RM_Quantiy_Decreased_MT = "262";
+            const String ByProduct_Quantiy_Increased_MT = "531";
+
+            string strConn = SqlLib.getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
             OleDbConnection SpreadsheetReportConn = new OleDbConnection(strConn);
             SpreadsheetReportConn.Open();
 
             String selectionSQL = "SELECT [Order], [Batch] AS [Batch No], [Material] AS [FG No], [Material description] AS [FG Description], [Unit of Entry (=ERFME)] AS [UOM], " +
                       "[Quantity in unit of entry (ERFME)] AS [FG Qty], 'Raw Material' AS [Inventory Type], [Movement Type], [Actual start time] AS [Actual Start Date], " +
-                      "[Actual finish date] AS [Actual End Date] FROM [Sheet1$] WHERE [Movement Type] IN ('101', '102') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')"; //(101 means quantity increase while 102 means qty decrease)
+                      "[Actual finish date] AS [Actual End Date] FROM [Sheet1$] WHERE ([Movement Type] IN ('" + FG_Quantiy_Increased_MT + "', '" + FG_Quantiy_Decreased_MT + "') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')) " +
+                      " OR (([Movement Type] = '"+ ByProduct_Quantiy_Increased_MT + "') AND ([Material description] LIKE '%-COLOR-%'))"; 
             OleDbDataAdapter SpreadsheetReportAdapter = new OleDbDataAdapter(selectionSQL, SpreadsheetReportConn);
             DataTable dtProductionOutputByProcessOrder = new DataTable();
             dtProductionOutputByProcessOrder.Columns.Add("FG Qty", typeof(Int32));
             SpreadsheetReportAdapter.Fill(dtProductionOutputByProcessOrder);
             dtProductionOutputByProcessOrder.Columns["FG Qty"].SetOrdinal(4);
             selectionSQL = "SELECT [Order], [Material] AS [Item No], [Material description] AS [Item Description], [Batch] AS [Lot No], [Movement Type], [Unit of Entry (=ERFME)] AS [UOM], " +
-                      "[Quantity in unit of entry (ERFME)] AS [RM Qty] FROM [Sheet1$] WHERE [Movement Type] IN ('261', '262') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')";
+                      "[Quantity in unit of entry (ERFME)] AS [RM Qty] FROM [Sheet1$] WHERE [Movement Type] IN ('" + RM_Quantiy_Increased_MT + "', '" + RM_Quantiy_Decreased_MT +"') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')";
             SpreadsheetReportAdapter = new OleDbDataAdapter(selectionSQL, SpreadsheetReportConn);
             DataTable dtProductionInputByProcessOrder = new DataTable();
             dtProductionInputByProcessOrder.Columns.Add("RM Qty", typeof(decimal));
@@ -1065,11 +1079,25 @@ namespace eCustoms
                 return messageToBeReturned;
             };
 
-            DataRow[]  RecordsWithMovementType102TobeChangedToNegativeQuantity = dtProductionOutputByProcessOrder.Select("[Movement Type] = '102'");// FG qty decrease in case there is wrong FG output which needs to be corrected
+            DataRow[]  RecordsWithMovementType102TobeChangedToNegativeQuantity = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + FG_Quantiy_Decreased_MT + "'");// FG qty decrease in case there is wrong FG output which needs to be corrected
             foreach (DataRow dr in RecordsWithMovementType102TobeChangedToNegativeQuantity)  //Apr.8.2017
             {
                 dr["FG Qty"] = -Convert.ToInt32(dr["FG Qty"].ToString().Trim());
             };
+
+            DataRow[] ByProductRecordsToBeChangedToPrimeProductRecord = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + ByProduct_Quantiy_Increased_MT + "'");
+            foreach (DataRow dr in ByProductRecordsToBeChangedToPrimeProductRecord)  //Mar.11.2019
+            {
+                DataRow[] PrimeProductsRecordPerProcessOrders = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + FG_Quantiy_Increased_MT + "' AND [Order] = '" + dr["Order"] + "'");
+                if (PrimeProductsRecordPerProcessOrders.Length > 0)
+                {
+                    dr["FG No"] = PrimeProductsRecordPerProcessOrders[0]["FG No"];
+                    dr["FG Description"] = PrimeProductsRecordPerProcessOrders[0]["FG Description"];
+                    dr["Movement Type"] = PrimeProductsRecordPerProcessOrders[0]["Movement Type"];
+                }
+            };
+
+
 
             dtProductionOutputByProcessOrder.Columns.Remove("UOM");
             dtProductionOutputByProcessOrder.Columns.Remove("Movement Type");
@@ -1100,7 +1128,7 @@ namespace eCustoms
                 dr["UOM"] = "KG";
             }
 
-            DataRow[] RecordsWithMovementType262TobeChangedToNegativeQuantity = dtProductionInputByProcessOrder.Select("[Movement Type] = '262'");
+            DataRow[] RecordsWithMovementType262TobeChangedToNegativeQuantity = dtProductionInputByProcessOrder.Select("[Movement Type] = '" + RM_Quantiy_Decreased_MT + "'");
             foreach (DataRow dr in RecordsWithMovementType262TobeChangedToNegativeQuantity)  
             {
                 dr["RM Qty"] = - Math.Round(Convert.ToDecimal(double.Parse(dr["RM Qty"].ToString().Trim())),6);
@@ -1233,7 +1261,7 @@ namespace eCustoms
             DataTable warningMessageDataTable = new DataTable();
             warningMessageDataTable = (DataTable)returnExceptionMessageInTableAndString.messageInDataTable.Copy();
             ExcelSheetNamesAndDataTables.Add("Warning message", warningMessageDataTable);
-            exportDataTablesToSpreadSheets(ExcelSheetNamesAndDataTables);
+            funcLib.exportDataTablesToSpreadSheets(ExcelSheetNamesAndDataTables);
             messageToBeReturned += returnExceptionMessageInTableAndString.messageString;
             productionInputAndOutputDetailsPerProessOrder.Dispose(); 
 
@@ -1299,69 +1327,7 @@ namespace eCustoms
             messageTableAndString.messageString = messageToBeReturned;
             return messageTableAndString;
         }
-
-        private void exportDataTablesToSpreadSheets(Dictionary<string, DataTable> SpreadSheetNamesAndDataTables)
-        {
-
-            Microsoft.Office.Interop.Excel.Application excel = new Microsoft.Office.Interop.Excel.Application();
-            Microsoft.Office.Interop.Excel.Workbooks workbooks = excel.Workbooks;
-            Microsoft.Office.Interop.Excel.Workbook workbook = workbooks.Add(true);
-            Microsoft.Office.Interop.Excel.Worksheet worksheet = (Microsoft.Office.Interop.Excel.Worksheet)workbook.Worksheets[1];
-
-            int counterOfSpreadSheets = 1;
-            foreach (KeyValuePair<string, DataTable> kvp in SpreadSheetNamesAndDataTables)
-            {
-                DataTable spreadsheetDataSource = kvp.Value;
-                if (spreadsheetDataSource.Rows.Count > 0)
-                {
-                    if (counterOfSpreadSheets > 1)
-                    {
-                        object missing = System.Reflection.Missing.Value;
-                        worksheet = (Microsoft.Office.Interop.Excel.Worksheet)workbook.Worksheets.Add(missing, worksheet, missing, missing);
-                    }
-                    worksheet = (Microsoft.Office.Interop.Excel.Worksheet)workbook.Worksheets[counterOfSpreadSheets];
-                    worksheet.Name = kvp.Key;
-
-                    int NumberOfColumns = spreadsheetDataSource.Columns.Count;
-                    int NumberOfRows = spreadsheetDataSource.Rows.Count;
-                    String[,] dataArray = new String[NumberOfRows + 1, NumberOfColumns];
-
-
-                    for (int hearderColumn = 0; hearderColumn < NumberOfColumns; hearderColumn++)
-                    {
-                        dataArray[0, hearderColumn] = spreadsheetDataSource.Columns[hearderColumn].ColumnName;
-                    };
-
-                    DataRow dtRow = null;
-                    for (int rowNumber = 0; rowNumber < NumberOfRows; rowNumber++)
-                    {
-                        dtRow = spreadsheetDataSource.Rows[rowNumber];
-                        for (int columnNum = 0; columnNum < NumberOfColumns; columnNum++)
-                        { dataArray[rowNumber+1, columnNum] = "'" + dtRow.ItemArray[columnNum].ToString().Trim(); };
-                    };
-                    worksheet.Range["A1"].Resize[NumberOfRows + 1, NumberOfColumns].Value = dataArray;
-
-                    worksheet.Cells.EntireColumn.AutoFit();
-                };
-
-                counterOfSpreadSheets++;
-            }
-
-            workbook.Worksheets[1].Activate();
-            excel.Visible = true;
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
-            excel = null;
-        }
-
-
-        private String getOleBbConnnectionStringPerSpeadsheetFileExtension(string pathAndFileName)
-        {
-            if (pathAndFileName.ToLower().Contains(".xlsx"))
-            { return @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + pathAndFileName + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
-            else
-            { return @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + pathAndFileName + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
-        }
-
+        
     }
 
 

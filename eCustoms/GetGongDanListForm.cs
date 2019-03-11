@@ -72,37 +72,22 @@ namespace eCustoms
             if (this.ckSD.Checked == false && this.ckLE.Checked == false)
             { MessageBox.Show("Please select checkbox object first.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
-            String pathAndFileName = funcLib.getExcelFileToBeUploaded(this.txtPath);
+            String pathAndFileName = funcLib.getExcelFileToBeUploaded(txtPath);
             if (!String.IsNullOrEmpty(pathAndFileName))
             {
                 try
                 {
-                    bool bJudge = this.txtPath.Text.ToLower().Contains(".xlsx");
-                    this.ImportExcelData(this.txtPath.Text.Trim(), bJudge);
+                    ImportExcelData(pathAndFileName);
                 }
                 catch (Exception) { MessageBox.Show("Upload error, please try again.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); throw; }
             };
+
+            txtPath.Clear();
         }
 
-        private void btnUploadFile_Click(object sender, EventArgs e)
+        private void ImportExcelData(string strFilePath)
         {
-            if (this.ckSD.Checked == false && this.ckLE.Checked == false)
-            { MessageBox.Show("Please select checkbox object first.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            if (String.IsNullOrEmpty(this.txtPath.Text.Trim()))
-            { MessageBox.Show("Please select the upload path.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            try
-            {
-                bool bJudge = this.txtPath.Text.ToLower().Contains(".xlsx");
-                this.ImportExcelData(this.txtPath.Text.Trim(), bJudge);
-            }
-            catch (Exception) { MessageBox.Show("Upload error, please try again.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Warning); throw; }
-        }
-
-        private void ImportExcelData(string strFilePath, bool bJudge)
-        {
-            string strConn;
-            if (bJudge) { strConn = @"Provider=Microsoft.Ace.OLEDB.12.0;Data Source=" + strFilePath + "; Extended Properties='Excel 12.0;HDR=Yes;IMEX=1'"; }
-            else { strConn = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + strFilePath + ";Extended Properties='Excel 8.0;HDR=Yes;IMEX=1'"; }
+            String strConn = SqlLib.getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
 
             OleDbConnection myConn = new OleDbConnection(strConn);
             myConn.Open();
@@ -190,9 +175,11 @@ namespace eCustoms
                 gdlConn.Dispose();
                 return;
             }
+
+            String strCreatedToday = DateTime.Today.ToString("d");
             gdlComm.CommandText = "SELECT A1.[Batch No], '' AS [GongDan No], '' AS [IE Type], A1.[Delivery Qty] AS [GongDan Qty], 0 AS [Avail Qty], A2.[Order Price], " +
                                   "A2.[Order Currency], A2.[Order No], A2.[PartNo], A2.[Destination], A1.[Delivery No], A2.[Delivery SLOC], A1.[Shipto Party] FROM " +
-                                  "A_OutboundDeliveryRpt AS A1 INNER JOIN A_SalesOrderRpt AS A2 ON A1.[Purchasing Document] = A2.[Order No] ORDER BY A1.[Batch No]";
+                                  " (SELECT * FROM A_OutboundDeliveryRpt WHERE [Created Date] >='" + strCreatedToday  + "') AS A1 INNER JOIN (SELECT * FROM A_SalesOrderRpt WHERE [Created Date] >='" + strCreatedToday + "') AS A2 ON A1.[Purchasing Document] = A2.[Order No] ORDER BY A1.[Batch No]";
             SqlDataAdapter gdlAdapter = new SqlDataAdapter();
             gdlAdapter.SelectCommand = gdlComm;
             gdlAdapter.Fill(dtGongDanList);
@@ -264,71 +251,52 @@ namespace eCustoms
                 dtGongDanList.Columns.Clear();
                 return;
             }           
-            string strBatchNoList = null;
-            foreach (DataRow dr in dtGongDanList.Rows) { strBatchNoList += "'" + dr["Batch No"].ToString().Trim() + "',"; }
-            strBatchNoList = strBatchNoList.Remove(strBatchNoList.Trim().Length - 1);
-            //gdlComm.CommandText = "SELECT [Batch No], MAX([GongDan No]) AS [GongDan No] FROM C_GongDan GROUP BY [Batch No] HAVING [Batch No] IN (" + strBatchNoList + ")";
-            gdlComm.CommandText = "SELECT [Batch No], max(convert(int, RIGHT([GongDan no],CHARINDEX('-',REVERSE([GongDan no]),0)-1))) AS [GongDan No] FROM C_GongDan GROUP BY [Batch No] HAVING [Batch No] IN (" + strBatchNoList + ")"; //June.29.2017
+
+            StringBuilder sqlInListOfBatchNos = new StringBuilder("'',");
+            foreach (DataRow dr in dtGongDanList.Rows)
+            {
+                sqlInListOfBatchNos.Append("'" + dr["Batch No"].ToString().Trim() + "',");
+            }
+            sqlInListOfBatchNos.Length--;
+
+            gdlComm.CommandText = "SELECT [Batch No], max(convert(int, RIGHT([GongDan no],CHARINDEX('-',REVERSE([GongDan no]),0)-1))) AS [maxLineNoOfGongDan] FROM C_GongDan GROUP BY [Batch No] HAVING [Batch No] IN (" + sqlInListOfBatchNos.ToString() + ")"; 
             gdlAdapter = new SqlDataAdapter();
             gdlAdapter.SelectCommand = gdlComm;
-            DataTable dtMaxGD = new DataTable();
-            gdlAdapter.Fill(dtMaxGD);
+            DataTable dtBatchNoAndMaxGongDanNo = new DataTable();
+            gdlAdapter.Fill(dtBatchNoAndMaxGongDanNo);
             gdlAdapter.Dispose();
-            strBatchNoList = null;
-            string strGongDanNo = null;
+
+            DataView dv = dtGongDanList.DefaultView;
+            dv.Sort = "[Batch No] DESC";
+            dtGongDanList = dv.ToTable();
+            String previousBatchNo = String.Empty;
+            String strGongDanNo = String.Empty;
             foreach (DataRow dr in dtGongDanList.Rows)
             {
                 string strBatchNo = dr["Batch No"].ToString().Trim();
-                if (String.Compare(strBatchNoList, strBatchNo) == 0)
+                if (String.Compare(previousBatchNo, strBatchNo) == 0)
                 {
-                    string strLineNo = strGongDanNo.Trim().Split('-')[1];
-                    int iLineNo = Convert.ToInt32(strLineNo) + 1;
-                    strGongDanNo = strBatchNo + "-" + iLineNo.ToString().Trim();
+                    string LineNoOfGongDan = strGongDanNo.Trim().Split('-')[1];
+                    int iLineNo = Convert.ToInt32(LineNoOfGongDan) + 1;
+                    strGongDanNo = strBatchNo + "-" + iLineNo.ToString();
                     dr["GongDan No"] = strGongDanNo;
                 }
                 else
                 {
-                    DataRow[] drow = dtMaxGD.Select("[Batch No]='" + strBatchNo + "'");
-                    if (drow.Length == 0) { dr["GongDan No"] = strBatchNo + "-1"; }
+                    DataRow[] drBatchNoAndMaxGongDanNo = dtBatchNoAndMaxGongDanNo.Select("[Batch No]='" + strBatchNo + "'");
+                    if (drBatchNoAndMaxGongDanNo.Length == 0) { dr["GongDan No"] = strBatchNo + "-1"; }
                     else
                     {
-                        //string strLineNo = drow[0]["GongDan No"].ToString().Trim().Split('-')[1];
-                        string strLineNo = drow[0]["GongDan No"].ToString(); //June.20.2017 get the maximum number of Gongdan NO
-                        int iLineNo = Convert.ToInt32(strLineNo) + 1;
-                        dr["GongDan No"] = strBatchNo + "-" + iLineNo.ToString().Trim();
+                        string maxLineNoOfGongDan = drBatchNoAndMaxGongDanNo[0]["maxLineNoOfGongDan"].ToString(); //June.20.2017 get the maximum number of Gongdan NO
+                        int iLineNo = Convert.ToInt32(maxLineNoOfGongDan) + 1;
+                        dr["GongDan No"] = strBatchNo + "-" + iLineNo.ToString();
                     }
-                    strBatchNoList = strBatchNo;
+                    previousBatchNo = strBatchNo;
                     strGongDanNo = dr["GongDan No"].ToString().Trim();
                 }
             }
             dtGongDanList.AcceptChanges();
-            dtMaxGD.Dispose();
-            DataView dv = dtGongDanList.DefaultView;
-            dv.Sort = "Batch No ASC";
-            dtGongDanList = dv.ToTable();
-            string[] strFieldName = { "GongDan No" };
-            SqlLib sqlLib = new SqlLib();
-            DataTable dtListGD = sqlLib.SelectDistinct(dtGongDanList, strFieldName);
-            sqlLib.Dispose(0);
-            if (dtListGD.Rows.Count < dtGongDanList.Rows.Count)
-            {
-                foreach (DataRow dr in dtListGD.Rows)
-                {
-                    string strGD = dr[0].ToString().Trim();
-                    DataRow[] drow = dtGongDanList.Select("[GongDan No]='" + strGD + "'");
-                    int iLineNum = Convert.ToInt32(strGD.Split('-')[1]);
-                    if (drow.Length > 1)
-                    {
-                        for (int i = 1; i < drow.Length; i++)
-                        {
-                            iLineNum = iLineNum + 1;
-                            drow[i]["GongDan No"] = strGD.Split('-')[0] + "-" + iLineNum.ToString();
-                        }
-                    }
-                }
-            }
-            dtGongDanList.AcceptChanges();
-            dtListGD.Dispose();
+            dtBatchNoAndMaxGongDanNo.Dispose();
 
             dtGongDanList = determineIE_Type(dtGongDanList);
 
@@ -389,12 +357,23 @@ namespace eCustoms
             }
             dtGongDanList.AcceptChanges();
 
+            warningWhenIE_TypeIsBlank(dtGongDanList);
+
             ListOfGD_withRMB_component.Dispose();
             gdWithRMBcomponent.Dispose();
             gdlAdapter.Dispose();
             gdlConn.Dispose();
 
             return dtGongDanList;
+        }
+
+        private void warningWhenIE_TypeIsBlank(DataTable dtGongDanList)
+        {
+            DataRow[] recordWhenIE_TypeIsBlank = dtGongDanList.Select("[IE Type] = ''");
+            foreach (DataRow dr in recordWhenIE_TypeIsBlank)
+            {
+                MessageBox.Show("For Batch No " + dr["Batch No"].ToString() + " , field IE Type is blank. Please check SLOC, Destination or Currency data.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void dgvGongDanList_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)

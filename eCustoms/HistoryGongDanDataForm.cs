@@ -162,7 +162,7 @@ namespace eCustoms
                     string strUserName = Convert.ToString(GdDelComm.ExecuteScalar());
                     if (!String.IsNullOrEmpty(strUserName))
                     {
-                        if (String.Compare(strUserName.Trim().ToUpper(), loginFrm.PublicUserName.Trim().ToUpper()) != 0)
+                        if (String.Compare(strUserName.Trim().ToUpper(), funcLib.getCurrentUserName().Trim().ToUpper()) != 0)
                         {
                             MessageBox.Show(strUserName + " is handling RM Balance/Drools Balance data. Please wait for him/her to finish the process.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                             GdDelComm.Dispose();
@@ -172,7 +172,7 @@ namespace eCustoms
                     }
                     else
                     {
-                        GdDelComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = loginFrm.PublicUserName.ToUpper();
+                        GdDelComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName().ToUpper();
                         GdDelComm.CommandText = @"INSERT INTO B_MultiUser([UserName]) VALUES(@UserName)";
                         GdDelComm.ExecuteNonQuery();
                         GdDelComm.Parameters.Clear();
@@ -286,10 +286,7 @@ namespace eCustoms
                 //GdDl_excel.get_Range(GdDl_excel.Cells[1, 1], GdDl_excel.Cells[1, dtGdDl.Columns.Count]).NumberFormatLocal = "@";
                 for (int k = 0; k < dtGdDl.Columns.Count; k++) { GdDl_excel.Cells[1, k + 1] = dtGdDl.Columns[k].ColumnName.Trim(); }
 
-                //GdDl_excel.get_Range(GdDl_excel.Cells[1, 1], GdDl_excel.Cells[1, dtGdDl.Columns.Count]).Font.Bold = true;
-                //GdDl_excel.get_Range(GdDl_excel.Cells[1, 1], GdDl_excel.Cells[1, dtGdDl.Columns.Count]).AutoFilter(1, Type.Missing, Microsoft.Office.Interop.Excel.XlAutoFilterOperator.xlAnd, Type.Missing, true);
-                //GdDl_excel.get_Range(GdDl_excel.Cells[1, 1], GdDl_excel.Cells[iActualRow + 1, dtGdDl.Columns.Count]).Font.Name = "Verdana";
-                //GdDl_excel.get_Range(GdDl_excel.Cells[1, 1], GdDl_excel.Cells[iActualRow + 1, dtGdDl.Columns.Count]).Font.Size = 9;
+        
                 GdDl_excel.Cells.EntireColumn.AutoFit();
                 GdDl_excel.Cells.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignJustify;
                 GdDl_excel.Visible = true;

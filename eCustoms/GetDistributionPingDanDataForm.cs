@@ -890,7 +890,7 @@ namespace eCustoms
             SaveCommPD.Connection = SaveConnPD;
             SaveCommPD.CommandType = CommandType.StoredProcedure;
             SaveCommPD.CommandText = @"usp_InsertPingDanForRMD";
-            SaveCommPD.Parameters.AddWithValue("@Creater", loginFrm.PublicUserName.ToUpper());
+            SaveCommPD.Parameters.AddWithValue("@Creater", funcLib.getCurrentUserName().ToUpper());
             SaveCommPD.Parameters.AddWithValue("@PingDanDate", System.DateTime.Now);
             SaveCommPD.Parameters.AddWithValue("@tvp_PingDanRMD", dtCopy);
             SaveCommPD.Parameters.AddWithValue("@TotAmt", dTotAmt);
@@ -1027,7 +1027,7 @@ namespace eCustoms
             string strUserName = Convert.ToString(pdComm.ExecuteScalar());
             if (!String.IsNullOrEmpty(strUserName))
             {
-                if (String.Compare(strUserName.Trim().ToUpper(), loginFrm.PublicUserName.Trim().ToUpper()) != 0)
+                if (String.Compare(strUserName.Trim().ToUpper(), funcLib.getCurrentUserName().Trim().ToUpper()) != 0)
                 {
                     MessageBox.Show(strUserName + " is handling RM Balance/Drools Balance data. Please wait for him/her to finish the process.", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     pdConn.Dispose();
@@ -1037,7 +1037,7 @@ namespace eCustoms
             }
             else
             {
-                pdComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = loginFrm.PublicUserName.ToUpper();
+                pdComm.Parameters.Add("@UserName", SqlDbType.NVarChar).Value = funcLib.getCurrentUserName().ToUpper();
                 pdComm.CommandText = "INSERT INTO B_MultiUser([UserName]) VALUES(@UserName)";
                 pdComm.ExecuteNonQuery();
                 pdComm.Parameters.RemoveAt("@UserName");

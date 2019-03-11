@@ -15,7 +15,7 @@ namespace eCustoms
         public MainForm()
         {
             InitializeComponent();
-            this.lblName.Text = "Login: " + loginFrm.PublicUserName;
+            this.lblName.Text = "Login: " + funcLib.getCurrentUserName();
         }
 
         private void ExitTSMI_Click(object sender, EventArgs e)

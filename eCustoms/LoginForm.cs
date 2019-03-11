@@ -22,7 +22,7 @@ namespace eCustoms
             InitializeComponent();
         }
 
-        public string PublicUserName
+        public static string PublicUserName
         {
             get { return StrPublicUserName; }
             set { StrPublicUserName = value; }
@@ -30,42 +30,49 @@ namespace eCustoms
 
         private void LoginForm_Load(object sender, EventArgs e)
         {
-            String version1 = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            SqlConnection SqlConn = new SqlConnection(SqlLib.StrSqlConnection);
-            if (SqlConn.State == ConnectionState.Closed) { SqlConn.Open(); }
-
-            SqlCommand SqlComm = new SqlCommand();
-            SqlComm.Connection = SqlConn;
-
-
-            SqlComm.CommandText = @"SELECT * FROM " + FUVs.tableOfUsers;
-            SqlDataAdapter oneAdapter = new SqlDataAdapter();
-            oneAdapter.SelectCommand = SqlComm;
-
-            oneAdapter.Fill(userInfoList);
-            SqlComm.Dispose();
-            oneAdapter.Dispose();
-
-            if (SqlConn.State == ConnectionState.Open) {SqlConn.Close();  }
-            SqlConn.Dispose();
-
-            String SSOnum = Environment.UserName;
-            DataRow[] dtUsers = userInfoList.Select("[SSO] = '" + SSOnum + "'");
-            
-            if (dtUsers.Length > 0 )
+            try
             {
-                this.txtLoginName.Text = dtUsers[0]["LoginName"].ToString();
-                this.txtPassword.Text = RijndaelAlgorithm.Decrypt(dtUsers[0]["Password"].ToString());
-                       
-            }
-            else
-            {
-                this.txtLoginName.Text = "";
- 
-            }
+                String version1 = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                SqlConnection SqlConn = new SqlConnection(SqlLib.StrSqlConnection);
+                if (SqlConn.State == ConnectionState.Closed) { SqlConn.Open(); }
 
-            numberOfTry = 3;
-            
+                SqlCommand SqlComm = new SqlCommand();
+                SqlComm.Connection = SqlConn;
+
+
+                SqlComm.CommandText = @"SELECT * FROM " + FUVs.tableOfUsers;
+                SqlDataAdapter oneAdapter = new SqlDataAdapter();
+                oneAdapter.SelectCommand = SqlComm;
+
+                oneAdapter.Fill(userInfoList);
+                SqlComm.Dispose();
+                oneAdapter.Dispose();
+
+                if (SqlConn.State == ConnectionState.Open) { SqlConn.Close(); }
+                SqlConn.Dispose();
+
+                String SSOnum = Environment.UserName;
+                DataRow[] dtUsers = userInfoList.Select("[SSO] = '" + SSOnum + "'");
+
+                if (dtUsers.Length > 0)
+                {
+                    this.txtLoginName.Text = dtUsers[0]["LoginName"].ToString();
+                    this.txtPassword.Text = RijndaelAlgorithm.Decrypt(dtUsers[0]["Password"].ToString());
+
+                }
+                else
+                {
+                    this.txtLoginName.Text = "";
+
+                }
+
+                numberOfTry = 3;
+            }
+            catch(Exception)
+            {
+                labelTitle.Text = "Please contact IT colleagues \n for database connection!";
+                btnLogin.Enabled = false;
+            }
         }
 
         private void LoginForm_Shown(object sender, EventArgs e)
@@ -102,8 +109,6 @@ namespace eCustoms
 
             DataRow[] dtUsers = userInfoList.Select("[LoginName] = '" + userName + "' And [Password] = '" + passWord + "' AND Approved = 'True'");
 
-
-
             if (dtUsers.Length  > 0)
             {
                 var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -118,6 +123,9 @@ namespace eCustoms
                 }
 
                 StrPublicUserName = userName;
+
+                funcLib.releaseExclusiveControlOverDataTable();
+
                 MainForm MF = new MainForm();
                 MF.WindowState = FormWindowState.Maximized;
                 MF.Show();
