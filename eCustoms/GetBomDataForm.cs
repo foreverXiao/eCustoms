@@ -1046,6 +1046,7 @@ namespace eCustoms
             const String RM_Quantiy_Increased_MT = "261";
             const String RM_Quantiy_Decreased_MT = "262";
             const String ByProduct_Quantiy_Increased_MT = "531";
+            const String ByProduct_Quantiy_Decreased_MT = "532";
 
             string strConn = SqlLib.getOleBbConnnectionStringPerSpeadsheetFileExtension(strFilePath);
             OleDbConnection SpreadsheetReportConn = new OleDbConnection(strConn);
@@ -1054,7 +1055,7 @@ namespace eCustoms
             String selectionSQL = "SELECT [Order], [Batch] AS [Batch No], [Material] AS [FG No], [Material description] AS [FG Description], [Unit of Entry (=ERFME)] AS [UOM], " +
                       "[Quantity in unit of entry (ERFME)] AS [FG Qty], 'Raw Material' AS [Inventory Type], [Movement Type], [Actual start time] AS [Actual Start Date], " +
                       "[Actual finish date] AS [Actual End Date] FROM [Sheet1$] WHERE ([Movement Type] IN ('" + FG_Quantiy_Increased_MT + "', '" + FG_Quantiy_Decreased_MT + "') AND [Unit of Entry (=ERFME)] IN ('G', 'KG')) " +
-                      " OR (([Movement Type] = '"+ ByProduct_Quantiy_Increased_MT + "') AND ([Material description] LIKE '%-COLOR-%'))"; 
+                      " OR (([Movement Type] IN ('" + ByProduct_Quantiy_Increased_MT + "', '" + ByProduct_Quantiy_Decreased_MT + "')) AND ([Material description] LIKE '%-COLOR-%'))"; 
             OleDbDataAdapter SpreadsheetReportAdapter = new OleDbDataAdapter(selectionSQL, SpreadsheetReportConn);
             DataTable dtProductionOutputByProcessOrder = new DataTable();
             dtProductionOutputByProcessOrder.Columns.Add("FG Qty", typeof(Int32));
@@ -1079,13 +1080,9 @@ namespace eCustoms
                 return messageToBeReturned;
             };
 
-            DataRow[]  RecordsWithMovementType102TobeChangedToNegativeQuantity = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + FG_Quantiy_Decreased_MT + "'");// FG qty decrease in case there is wrong FG output which needs to be corrected
-            foreach (DataRow dr in RecordsWithMovementType102TobeChangedToNegativeQuantity)  //Apr.8.2017
-            {
-                dr["FG Qty"] = -Convert.ToInt32(dr["FG Qty"].ToString().Trim());
-            };
 
-            DataRow[] ByProductRecordsToBeChangedToPrimeProductRecord = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + ByProduct_Quantiy_Increased_MT + "'");
+
+            DataRow[] ByProductRecordsToBeChangedToPrimeProductRecord = dtProductionOutputByProcessOrder.Select("[Movement Type] IN ('" + ByProduct_Quantiy_Increased_MT + "', '" + ByProduct_Quantiy_Decreased_MT + "')");
             foreach (DataRow dr in ByProductRecordsToBeChangedToPrimeProductRecord)  //Mar.11.2019
             {
                 DataRow[] PrimeProductsRecordPerProcessOrders = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + FG_Quantiy_Increased_MT + "' AND [Order] = '" + dr["Order"] + "'");
@@ -1093,11 +1090,25 @@ namespace eCustoms
                 {
                     dr["FG No"] = PrimeProductsRecordPerProcessOrders[0]["FG No"];
                     dr["FG Description"] = PrimeProductsRecordPerProcessOrders[0]["FG Description"];
-                    dr["Movement Type"] = PrimeProductsRecordPerProcessOrders[0]["Movement Type"];
+                    if (dr["Movement Type"].ToString() == ByProduct_Quantiy_Increased_MT)
+                    {
+                        dr["Movement Type"] = FG_Quantiy_Increased_MT;
+                    }
+                    else
+                    {
+                        dr["Movement Type"] = FG_Quantiy_Decreased_MT;
+                    }
+              
+                    
                 }
             };
 
 
+            DataRow[] RecordsWithMovementType102TobeChangedToNegativeQuantity = dtProductionOutputByProcessOrder.Select("[Movement Type] = '" + FG_Quantiy_Decreased_MT + "'");// FG qty decrease in case there is wrong FG output which needs to be corrected
+            foreach (DataRow dr in RecordsWithMovementType102TobeChangedToNegativeQuantity)  //Apr.8.2017
+            {
+                dr["FG Qty"] = -Convert.ToInt32(dr["FG Qty"].ToString().Trim());
+            };
 
             dtProductionOutputByProcessOrder.Columns.Remove("UOM");
             dtProductionOutputByProcessOrder.Columns.Remove("Movement Type");
